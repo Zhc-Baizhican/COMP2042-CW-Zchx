@@ -10,17 +10,20 @@ import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.File;
+import java.net.URL;
 import java.util.Random;
 
 public class GameController {
+    private static final String COIN_SOUND_RESOURCE = "/resources/views/res/coinSound.wav";
+
     private Snake snek;
     private Coin coin;
     private GameView gameView;
     private Game game;
     private Stage stage;
-    private String coinSoundPath = "resources/views/res/coinSound.wav";
     private Obstacle obstacle;
+    private MediaPlayer coinSound;
+    private final Random random = new Random();
 
     public static KeyCode key = KeyCode.LEFT;
     public static KeyCode lastKey = KeyCode.LEFT;
@@ -41,6 +44,7 @@ public class GameController {
         this.stage = stage;
 
         this.obstacle = obstacle;
+        this.coinSound = loadSound(COIN_SOUND_RESOURCE);
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
     }
@@ -61,6 +65,7 @@ public class GameController {
             }
 
             if (!snek.getDead() && snek.ateCoin(coin)) {
+                playCoinSound();
                 powerCoin();
                 game.incScore();
                 if (game.gameWon()) {
@@ -172,23 +177,57 @@ public class GameController {
         game.addPoints(coin.getPoints());
     }
 
+    /**
+     * Chooses the next coin to appear.
+     *
+     * <p>The previous version tested {@code ran == 1} twice, so the rainbow coin
+     * branch was unreachable and the speed power-up never spawned. The silver
+     * coin branch also required the board to have no obstacles at all, which is
+     * mutually exclusive with the situation in which it is meant to appear.
+     * Each branch now has its own value.</p>
+     */
     private void newCoin() {
-        if (game.isPowerUp()) {
-            Random rnd = new Random();
-            int ran = rnd.nextInt(12);
-            if (ran == 1) {
-                coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            } else if (ran == 1) {
-                coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            } else if (ran == 3) {
-                coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            } else if (ran == 4 && obstacle.getObstacles().size() == 0) {
-                coin = new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            } else {
-                coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
-            }
-        } else {
+        if (!game.isPowerUp()) {
             coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+            return;
         }
+
+        int ran = random.nextInt(12);
+        switch (ran) {
+            case 1 -> coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+            case 2 -> coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+            case 3 -> coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+            case 4 -> coin = new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+            default -> coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+        }
+    }
+
+    /**
+     * Loads a sound clip from the classpath.
+     *
+     * @param resourcePath absolute classpath location, e.g. {@code /views/res/hit.wav}
+     * @return a ready player, or {@code null} when the clip cannot be loaded, so
+     *         that a missing audio file never stops the game from running
+     */
+    private MediaPlayer loadSound(String resourcePath) {
+        try {
+            URL url = getClass().getResource(resourcePath);
+            if (url == null) {
+                System.err.println("Sound resource not found: " + resourcePath);
+                return null;
+            }
+            return new MediaPlayer(new Media(url.toExternalForm()));
+        } catch (Exception e) {
+            System.err.println("Sound unavailable: " + resourcePath + " (" + e.getMessage() + ")");
+            return null;
+        }
+    }
+
+    private void playCoinSound() {
+        if (coinSound == null) {
+            return;
+        }
+        coinSound.stop();
+        coinSound.play();
     }
 }
