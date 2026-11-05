@@ -1,0 +1,66 @@
+@font-face {
+    src: url("res/SFPixelateShaded-Bold.ttf");
+}
+@font-face {
+    src: url("res/SFPixelate.ttf");
+}
+
+.root {
+    -fx-background-color: White;
+}
+
+.button {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 18;
+    -fx-text-fill: #ffffff;
+    -fx-background-image: url("res/btn.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 115 40;
+}
+
+.button:pressed {
+    -fx-background-image: url("res/btn_pressed.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 115 40;
+}
+
+.startAndQuitBtn {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 18;
+    -fx-text-fill: #ffffff;
+    -fx-background-image: url("res/btn.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 115 40;
+}
+
+.startAndQuitBtn:pressed {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 18;
+    -fx-text-fill: #000000;
+    -fx-background-image: url("res/btn_StartAndQuit_pressed.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 115 40;
+}
+
+.label {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 35;
+}
+
+#title {
+    -fx-font-family: "SF Pixelate Shaded", bold;
+    -fx-font-size: 40;
+}
+
+#gameOverLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 30;
+}
+#gameWonLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 30;
+}
+#scoreLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 20;
+}
