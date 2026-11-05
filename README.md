@@ -49,7 +49,12 @@ cd CW2026-master
 
 ## 3. Implemented and Working Properly
 
-<!-- TODO: fill in as features are completed -->
+- Arrow-key controlled snake with self-collision and wall-collision detection
+- Five coin types with distinct effects: normal, gold (+15 points), silver (adds obstacles), blue (fearless of borders), rainbow (speed-up)
+- Obstacles that the snake must avoid
+- Score display updated on every coin
+- Coin sound effect played on pickup
+- Pause (`P`), restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
 
 ---
 
@@ -78,7 +83,9 @@ cd CW2026-master
 | `pom.xml` | `maven.compiler.release` 21 → 17; JavaFX 25.0.1 → 21.0.13 | The original values cannot be built with the installed JDK 17, and JavaFX 25 requires JDK 23 or newer |
 | `Coin.java` | Spawn position now comes from a precomputed list of free cells | The original retry loop was unbounded and could freeze the game once the board was nearly full |
 | `Obstacle.java` | Placement restricted to columns `[0, width - 1]`; free-cell list with shuffle replaces the retry loop; hard cap of 50 kept | The original `nextInt(x) + 1` could place an obstacle one cell outside the board, and the retry loop could spin forever |
-| `GameController.java` | Coin selection rewritten as a `switch` with distinct branches; coin sound wired up; unused field and import removed | `ran == 1` was tested twice, so the rainbow coin was unreachable; the silver coin required an empty board and never appeared; the imported `MediaPlayer` was never used, so no sound was ever played |
+| `GameController.java` | Coin selection rewritten as a `switch` with distinct branches; coin sound wired up; unused field and import removed; dead scoring helper deleted; redraw condition simplified; obstacle shrink now counts only newly added cells | `ran == 1` was tested twice, so the rainbow coin was unreachable; the silver coin required an empty board and never appeared; the imported `MediaPlayer` was never used, so no sound was ever played; `calculateBonusScore` and `unusedObstacleCount` were never called |
+| `Game.java` | Difficulty handled by a `switch` with a `default` branch; duplicated `powerUp` assignment removed; win check uses `>=`; `decMaxScore` now subtracts the value it is given | An unrecognised difficulty left `speed` at 0, which froze the animation; the win check could be skipped, and the previous `num - 1` arithmetic double-counted obstacles |
+| `GameView.java` | Fullscreen scale computed per axis and applied once; `fullScale * fullScale` corrected in head and body drawing | Sprite sizes were squared when scaled up, and the width scale was computed from the screen height |
 
 ---
 

@@ -29,13 +29,6 @@ public class GameController {
     public static KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
 
-    private int legacyScoreMultiplier = 2;
-
-    private void calculateBonusScore() {
-        int bonus = game.getScorePoints() * legacyScoreMultiplier;
-        System.out.println("Bonus score: " + bonus);
-    }
-
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
         this.coin = coin;
@@ -77,7 +70,7 @@ public class GameController {
 
             keyPressed = false;
 
-            if (!snek.getDead() || snek.hitSelf()) {
+            if (!snek.getDead()) {
                 gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
             }
 
@@ -146,8 +139,6 @@ public class GameController {
         snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
 
-        int unusedObstacleCount = new Random().nextInt(game.getWidth() * game.getHeight() / 20) + 3;
-
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
         keyPressed = false;
@@ -168,9 +159,11 @@ public class GameController {
             RainbowCoin tempCoin = (RainbowCoin) coin;
             animation.setRate(game.getSpeed() + tempCoin.getSpeedBonus());
         } else if (coin.getClass().equals(SilverCoin.class)){
-            Random rnd = new Random();
-            obstacle.newObstacles(snek, coin, rnd.nextInt(game.getWidth() * game.getHeight()/ 20) +3);
-            game.decMaxScore(obstacle.getObstacles().size());
+            int before = obstacle.getObstacles().size();
+            obstacle.newObstacles(snek, coin, random.nextInt(game.getWidth() * game.getHeight()/ 20) +3);
+            // Only the cells actually added shrink the board; passing the running
+            // total would subtract the same obstacles again on every silver coin.
+            game.decMaxScore(obstacle.getObstacles().size() - before);
         } else if (coin.getClass().equals(BlueCoin.class)) {
             snek.ignoreBorders(true);
         }
