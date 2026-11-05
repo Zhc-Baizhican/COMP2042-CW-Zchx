@@ -45,6 +45,15 @@ cd CW2026-master
 .\mvnw.cmd clean package
 ```
 
+### Run the tests
+
+```powershell
+.\mvnw.cmd test
+```
+
+The suite uses JUnit 5 (Jupiter) and covers the board configuration, the
+difficulty presets, scoring and the win condition — 12 tests in total.
+
 ---
 
 ## 3. Implemented and Working Properly
@@ -55,6 +64,7 @@ cd CW2026-master
 - Score display updated on every coin
 - Coin sound effect played on pickup
 - Pause (`P`), restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
+- Unit tests (JUnit 5, `src/test/java`) — 12 tests on `Game`, run with `.\mvnw.cmd test`
 
 ---
 
