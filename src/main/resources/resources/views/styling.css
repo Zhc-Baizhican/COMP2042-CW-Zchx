@@ -1,7 +1,10 @@
 @font-face {
+    font-family: "SF Pixelate Shaded";
     src: url("res/SFPixelateShaded-Bold.ttf");
 }
+
 @font-face {
+    font-family: "SF Pixelate";
     src: url("res/SFPixelate.ttf");
 }
 
@@ -48,7 +51,8 @@
 }
 
 #title {
-    -fx-font-family: "SF Pixelate Shaded", bold;
+    -fx-font-family: "SF Pixelate Shaded";
+    -fx-font-weight: bold;
     -fx-font-size: 40;
 }
 
