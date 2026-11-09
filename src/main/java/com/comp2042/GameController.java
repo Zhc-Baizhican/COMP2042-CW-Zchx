@@ -81,7 +81,11 @@ public class GameController {
     }));
 
     public void handle(KeyEvent event) {
-        if (event.getCode().isArrowKey()) animation.play();
+        // Arrow keys start the game loop, but must not restart it while paused:
+        // the overlay would stay up with the snake still moving underneath it.
+        if (event.getCode().isArrowKey() && !paused) {
+            animation.play();
+        }
 
         if (valKey(event.getCode()) && !keyPressed) {
             lastKey = key;
