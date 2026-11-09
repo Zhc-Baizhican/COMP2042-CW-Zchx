@@ -1,5 +1,6 @@
 package com.comp2042;
 
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -7,23 +8,25 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.awt.*;
+import java.net.URL;
 
 public class GameView {
 
     public Canvas gridCanvas;
     public GraphicsContext gc;
 
-    public Label gameOverLabel;
-    public Label gameWonLabel;
     public Label scoreLabel;
-    private boolean gameOverVis = false;
-    private boolean gameWonVis = false;
+    public StackPane statusOverlay;
+    private Label statusTitle;
+    private Label statusDetail;
 
     private Game game;
     private double initX;
@@ -44,22 +47,36 @@ public class GameView {
         gc = gridCanvas.getGraphicsContext2D();
         drawGrid(coin, snek, gc);
 
-        gameOverLabel = new Label("GAME OVER");
-        gameOverLabel.setId("gameOverLabel");
-        String css = "resources/views/styling.css";
-        gameOverLabel.getStylesheets().add(css);
-        gameOverLabel.setVisible(false);
-
-        gameWonLabel = new Label("YOU WON!");
-        gameWonLabel.setId("gameWonLabel");
-        gameWonLabel.getStylesheets().add(css);
-        gameWonLabel.setVisible(false);
+        addStylesheet(scene);
 
         scoreLabel = new Label("Score: " + game.getScorePoints());
         scoreLabel.setId("scoreLabel");
-        scoreLabel.getStylesheets().add(css);
-        scoreLabel.setFont(new Font("Arial", 20));
-        scoreLabel.setVisible(true);
+
+        statusTitle = new Label();
+        statusTitle.getStyleClass().add("statusTitle");
+        statusDetail = new Label();
+        statusDetail.getStyleClass().add("statusDetail");
+        statusDetail.setWrapText(true);
+        statusDetail.setTextAlignment(TextAlignment.CENTER);
+
+        VBox statusBox = new VBox(statusTitle, statusDetail);
+        statusBox.setAlignment(Pos.CENTER);
+        statusBox.setSpacing(12);
+
+        statusOverlay = new StackPane(statusBox);
+        statusOverlay.getStyleClass().add("statusOverlay");
+        statusOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        statusOverlay.setVisible(false);
+    }
+
+    /** Attaches the stylesheet once, at the scene level, instead of per label. */
+    private void addStylesheet(Scene scene) {
+        URL css = getClass().getResource("/resources/views/styling.css");
+        if (css == null) {
+            System.err.println("Stylesheet not found: /resources/views/styling.css");
+            return;
+        }
+        scene.getStylesheets().add(css.toExternalForm());
     }
 
     public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snek, Coin coin) {
@@ -83,8 +100,6 @@ public class GameView {
             fullsize = false;
         }
 
-        gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
-        gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
         drawGrid(coin, snek, obstacle, gc, false, 0);
     }
 
@@ -184,24 +199,35 @@ public class GameView {
         } else turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 0;
     }
 
-    public void gameOver(Snake snek) {
-        if (snek.getDead() && !gameOverVis) {
-            gameOverVis = true;
-            gameOverLabel.setVisible(true);
-        } else if (!snek.getDead() && gameOverVis) {
-            gameOverLabel.setVisible(false);
-            gameOverVis = false;
+    /**
+     * Shows the single status overlay for whichever state currently applies.
+     * Win and loss take priority over pause, because the snake is not moving in
+     * either of those states anyway.
+     *
+     * @param snek   the snake, used to detect a lost game
+     * @param paused whether the player has paused the game
+     */
+    public void updateStatus(Snake snek, boolean paused) {
+        String newline = System.lineSeparator();
+        if (game.gameWon()) {
+            showStatus("YOU WON!", "Score: " + game.getScorePoints() + newline + "Press TAB to play again");
+        } else if (snek.getDead()) {
+            showStatus("GAME OVER", "Score: " + game.getScorePoints() + newline + "TAB restart        ESC menu");
+        } else if (paused) {
+            showStatus("PAUSED", "Press P to resume");
+        } else {
+            hideStatus();
         }
     }
 
-    public void gameWon() {
-        if (game.gameWon() && !gameWonVis) {
-            gameWonVis = true;
-            gameWonLabel.setVisible(true);
-        } else if (!game.gameWon() && gameWonVis) {
-            gameWonVis = false;
-            gameWonLabel.setVisible(false);
-        }
+    private void showStatus(String title, String detail) {
+        statusTitle.setText(title);
+        statusDetail.setText(detail);
+        statusOverlay.setVisible(true);
+    }
+
+    private void hideStatus() {
+        statusOverlay.setVisible(false);
     }
 
     public void updateScoreLabel() {

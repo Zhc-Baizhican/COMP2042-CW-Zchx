@@ -28,6 +28,7 @@ public class GameController {
     public static KeyCode key = KeyCode.LEFT;
     public static KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
+    private boolean paused = false;
 
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
@@ -74,8 +75,7 @@ public class GameController {
                 gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
             }
 
-            gameView.gameWon();
-            gameView.gameOver(snek);
+            gameView.updateStatus(snek, paused);
             gameView.updateScoreLabel();
         }
     }));
@@ -91,7 +91,13 @@ public class GameController {
         }
 
         if (event.getCode().equals(KeyCode.P)) {
-            animation.stop();
+            paused = !paused;
+            if (paused) {
+                animation.stop();
+            } else {
+                animation.play();
+            }
+            gameView.updateStatus(snek, paused);
         }
 
         if (event.getCode().equals(KeyCode.TAB)) {
@@ -101,16 +107,10 @@ public class GameController {
 
         if (event.getCode().equals(KeyCode.PLUS)) {
             gameView.scaleToFullscreen(true, stage, obstacle, snek, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 50;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 50;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 35;");
         }
 
         if (event.getCode().equals(KeyCode.MINUS)) {
             gameView.scaleToFullscreen(false, stage, obstacle, snek, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 15;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 15;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 15;");
         }
 
         if (event.getCode().equals(KeyCode.ESCAPE)) {
@@ -145,8 +145,8 @@ public class GameController {
         game.resetScore();
         obstacle.reset();
 
-        gameView.gameWon();
-        gameView.gameOver(snek);
+        paused = false;
+        gameView.updateStatus(snek, paused);
         gameView.updateScoreLabel();
 
         gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
