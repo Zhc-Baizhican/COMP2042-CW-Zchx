@@ -61,9 +61,11 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Arrow-key controlled snake with self-collision and wall-collision detection
 - Five coin types with distinct effects: normal, gold (+15 points), silver (adds obstacles), blue (fearless of borders), rainbow (speed-up)
 - Obstacles that the snake must avoid
-- Score display updated on every coin
+- Score HUD pill in the top bar, updated on every coin
 - Coin sound effect played on pickup
-- Pause (`P`), restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
+- Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
+- Game over and level complete panels showing the final score and the restart keys
+- Main menu with logo, Start, difficulty selector (Normal / Hard / Easy) and Quit
 - Unit tests (JUnit 5, `src/test/java`) — 12 tests on `Game`, run with `.\mvnw.cmd test`
 
 ---
@@ -95,7 +97,9 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 | `Obstacle.java` | Placement restricted to columns `[0, width - 1]`; free-cell list with shuffle replaces the retry loop; hard cap of 50 kept | The original `nextInt(x) + 1` could place an obstacle one cell outside the board, and the retry loop could spin forever |
 | `GameController.java` | Coin selection rewritten as a `switch` with distinct branches; coin sound wired up; unused field and import removed; dead scoring helper deleted; redraw condition simplified; obstacle shrink now counts only newly added cells | `ran == 1` was tested twice, so the rainbow coin was unreachable; the silver coin required an empty board and never appeared; the imported `MediaPlayer` was never used, so no sound was ever played; `calculateBonusScore` and `unusedObstacleCount` were never called |
 | `Game.java` | Difficulty handled by a `switch` with a `default` branch; duplicated `powerUp` assignment removed; win check uses `>=`; `decMaxScore` now subtracts the value it is given | An unrecognised difficulty left `speed` at 0, which froze the animation; the win check could be skipped, and the previous `num - 1` arithmetic double-counted obstacles |
-| `GameView.java` | Fullscreen scale computed per axis and applied once; `fullScale * fullScale` corrected in head and body drawing | Sprite sizes were squared when scaled up, and the width scale was computed from the screen height |
+| `GameView.java` | Fullscreen scale computed per axis and applied once; `fullScale * fullScale` corrected in head and body drawing; the two status labels were replaced by a single overlay with a title and a detail line; the stylesheet is now attached once at scene level | Sprite sizes were squared when scaled up, and the width scale was computed from the screen height; the old labels gave no restart hint and loaded the stylesheet three times by relative path |
+| `MainMenuController.java` | Added difficulty cycling, a Quit handler and a `@FXML` reference to the difficulty button; the chosen difficulty is passed to the game | The difficulty was a hard-coded constant, there was no way to quit, and the layout no longer uses the removed status labels |
+| `styling.css` | Deduplicated the button rules into `.menuButton` / `.primaryButton`, added hover and pressed states, restyled the score label as a HUD pill and added the `.statusOverlay` / `.statusTitle` / `.statusDetail` rules | The original file repeated the same four button properties twice and had no hover feedback; the in-game text had no backing panel and clashed with inline styles in `GameView` |
 
 ---
 
