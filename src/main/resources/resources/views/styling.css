@@ -9,62 +9,84 @@
 }
 
 .root {
-    -fx-background-color: White;
+    -fx-background-color: #ffffff;
 }
 
-.button {
+/* ---------- menu buttons ---------- */
+
+.menuButton {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 18;
+    -fx-font-size: 16;
     -fx-text-fill: #ffffff;
     -fx-background-image: url("res/btn.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
 }
 
-.button:pressed {
+.menuButton:hover {
     -fx-background-image: url("res/btn_pressed.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
 }
 
-.startAndQuitBtn {
-    -fx-font-family: "SF Pixelate";
-    -fx-font-size: 18;
-    -fx-text-fill: #ffffff;
-    -fx-background-image: url("res/btn.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
-}
-
-.startAndQuitBtn:pressed {
-    -fx-font-family: "SF Pixelate";
-    -fx-font-size: 18;
-    -fx-text-fill: #000000;
+.menuButton:pressed {
     -fx-background-image: url("res/btn_StartAndQuit_pressed.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
 }
 
-.label {
+.primaryButton {
     -fx-font-family: "SF Pixelate";
-    -fx-font-size: 35;
+    -fx-font-size: 22;
+    -fx-text-fill: #ffffff;
+    -fx-background-image: url("res/green_button04.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 190 49;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
 }
+
+.primaryButton:hover {
+    -fx-opacity: 0.88;
+}
+
+.primaryButton:pressed {
+    -fx-opacity: 0.74;
+}
+
+/* ---------- menu text ---------- */
 
 #title {
     -fx-font-family: "SF Pixelate Shaded";
-    -fx-font-weight: bold;
-    -fx-font-size: 40;
+    -fx-font-size: 34;
+}
+
+#difficultyLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 10;
+    -fx-text-fill: #9aa0a6;
+    -fx-padding: 2 0 0 0;
+}
+
+#hint {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 10;
+    -fx-text-fill: #9aa0a6;
+    -fx-padding: 6 0 0 0;
+}
+
+/* ---------- in-game labels (used by GameView) ---------- */
+
+.label {
+    -fx-font-family: "SF Pixelate";
 }
 
 #gameOverLabel {
-    -fx-font-family: "SF Pixelate";
     -fx-font-size: 30;
 }
+
 #gameWonLabel {
-    -fx-font-family: "SF Pixelate";
     -fx-font-size: 30;
 }
+
 #scoreLabel {
-    -fx-font-family: "SF Pixelate";
     -fx-font-size: 20;
 }

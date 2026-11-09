@@ -1,8 +1,12 @@
 package com.comp2042;
 
+import javafx.application.Platform;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -11,7 +15,21 @@ public class MainMenuController {
     private static final int X_VALUE = 20;
     private static final int Y_VALUE = 20;
     private static final boolean POWER_UP = true;
-    private static final char DIFFICULTY = 'N';
+
+    /** Difficulties in the order the button cycles through them. */
+    private static final char[] DIFFICULTY_CYCLE = {'N', 'H', 'E'};
+    private static final String[] DIFFICULTY_NAMES = {"Normal", "Hard", "Easy"};
+
+    private static final String[] DIFFICULTY_DESCRIPTIONS = {
+            "Normal: walls are deadly",
+            "Hard: faster, walls are deadly",
+            "Easy: walls wrap around"
+    };
+
+    @FXML
+    private Button btn_difficulty;
+
+    private int difficultyIndex = 0;
 
     private Scene gameScene;
 
@@ -27,8 +45,31 @@ public class MainMenuController {
         gameStage.show();
     }
 
+    /** Cycles Normal -> Hard -> Easy and reflects the choice on the button. */
+    public void handleDifficulty() {
+        difficultyIndex = (difficultyIndex + 1) % DIFFICULTY_CYCLE.length;
+        updateDifficultyButton();
+    }
+
+    @FXML
+    private void initialize() {
+        updateDifficultyButton();
+    }
+
+    private void updateDifficultyButton() {
+        if (btn_difficulty == null) {
+            return;
+        }
+        btn_difficulty.setText(DIFFICULTY_NAMES[difficultyIndex]);
+        btn_difficulty.setTooltip(new Tooltip(DIFFICULTY_DESCRIPTIONS[difficultyIndex]));
+    }
+
+    public void handleQuit() {
+        Platform.exit();
+    }
+
     private void launchSnake(Stage gameStage) {
-        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, DIFFICULTY);
+        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, DIFFICULTY_CYCLE[difficultyIndex]);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         Coin coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
