@@ -16,6 +16,17 @@ public class ViewManager {
 
     private Stage gameStage;
     private Stage settingsStage;
+    private Runnable onSettingsClosed;
+
+    /**
+     * Registers a callback that runs when the settings window closes, so the
+     * menu can refresh hints that depend on the current key bindings.
+     *
+     * @param callback the action to run, may be {@code null}
+     */
+    public void setOnSettingsClosed(Runnable callback) {
+        this.onSettingsClosed = callback;
+    }
 
     private Image snakeLogo = new Image("resources/views/res/SnakeLogoWhite.png");
 
@@ -81,6 +92,11 @@ public class ViewManager {
             settingsStage.getIcons().add(snakeLogo);
             settingsStage.setResizable(false);
             settingsStage.setScene(scene);
+            settingsStage.setOnHidden(event -> {
+                if (onSettingsClosed != null) {
+                    onSettingsClosed.run();
+                }
+            });
         }
         settingsStage.show();
         settingsStage.toFront();

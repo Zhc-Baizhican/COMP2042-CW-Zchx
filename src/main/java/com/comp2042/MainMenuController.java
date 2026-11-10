@@ -6,6 +6,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -29,6 +30,9 @@ public class MainMenuController {
     @FXML
     private Button btn_difficulty;
 
+    @FXML
+    private Label hint;
+
     private int difficultyIndex = 0;
 
     private Scene gameScene;
@@ -45,6 +49,27 @@ public class MainMenuController {
         gameStage.show();
     }
 
+    /**
+     * Rewrites the controls hint from the current key bindings, so it stays
+     * correct after the player rebinds anything.
+     */
+    private void refreshHints() {
+        if (hint == null) {
+            return;
+        }
+        hint.setText(String.format("%s %s %s %s move      %s pause      %s restart",
+                keyLabel(Action.MOVE_UP),
+                keyLabel(Action.MOVE_LEFT),
+                keyLabel(Action.MOVE_DOWN),
+                keyLabel(Action.MOVE_RIGHT),
+                keyLabel(Action.PAUSE),
+                keyLabel(Action.RESTART)));
+    }
+
+    private String keyLabel(Action action) {
+        return KeyBindings.get().labelFor(action);
+    }
+
     /** Cycles Normal -> Hard -> Easy and reflects the choice on the button. */
     public void handleDifficulty() {
         difficultyIndex = (difficultyIndex + 1) % DIFFICULTY_CYCLE.length;
@@ -54,6 +79,10 @@ public class MainMenuController {
     @FXML
     private void initialize() {
         updateDifficultyButton();
+        if (viewManager != null) {
+            viewManager.setOnSettingsClosed(this::refreshHints);
+        }
+        refreshHints();
     }
 
     private void updateDifficultyButton() {

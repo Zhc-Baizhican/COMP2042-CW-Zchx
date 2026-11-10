@@ -1,5 +1,7 @@
 package com.comp2042;
 
+import javafx.scene.input.KeyCode;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +28,7 @@ public final class SettingsStore {
     private static final String KEY_SKIN = "snake.skin";
     private static final String KEY_THEME = "theme.dark";
     private static final String KEY_WINDOW_SIZE = "display.windowSizeIndex";
+    private static final String KEY_PREFIX = "key.";
 
     private SettingsStore() {
         // Utility class.
@@ -63,6 +66,7 @@ public final class SettingsStore {
         settings.setSnakeSkin(SnakeSkin.fromName(properties.getProperty(KEY_SKIN)));
         settings.setDarkTheme(readBoolean(properties, KEY_THEME, settings.isDarkTheme()));
         settings.setWindowSizeIndex((int) readDouble(properties, KEY_WINDOW_SIZE, settings.getWindowSizeIndex()));
+        loadKeyBindings(properties);
     }
 
     /**
@@ -77,6 +81,7 @@ public final class SettingsStore {
         properties.setProperty(KEY_SKIN, settings.getSnakeSkin().name());
         properties.setProperty(KEY_THEME, Boolean.toString(settings.isDarkTheme()));
         properties.setProperty(KEY_WINDOW_SIZE, Integer.toString(settings.getWindowSizeIndex()));
+        saveKeyBindings(properties);
 
         Path file = location();
         try {
@@ -86,6 +91,29 @@ public final class SettingsStore {
             }
         } catch (IOException e) {
             System.err.println("Could not save settings: " + e.getMessage());
+        }
+    }
+
+    private static void loadKeyBindings(Properties properties) {
+        KeyBindings bindings = KeyBindings.get();
+        bindings.resetToDefaults();
+        for (Action action : Action.values()) {
+            String raw = properties.getProperty(KEY_PREFIX + action.name());
+            if (raw == null) {
+                continue;
+            }
+            try {
+                bindings.bind(action, KeyCode.valueOf(raw.trim()));
+            } catch (IllegalArgumentException e) {
+                System.err.println("Unknown key for " + action + ": " + raw);
+            }
+        }
+    }
+
+    private static void saveKeyBindings(Properties properties) {
+        KeyBindings bindings = KeyBindings.get();
+        for (Action action : Action.values()) {
+            properties.setProperty(KEY_PREFIX + action.name(), bindings.keyFor(action).name());
         }
     }
 

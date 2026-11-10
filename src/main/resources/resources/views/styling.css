@@ -182,6 +182,30 @@
     -fx-background-color: #2eb872;
 }
 
+.keyButton {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 12;
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #4a4f57;
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.keyButton:hover {
+    -fx-background-color: #5b616b;
+}
+
+.keyScroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.keyScroll > .viewport {
+    -fx-background-color: transparent;
+}
+
 /* ---------- night theme ----------
    Declared last so that they win over the light rules above, which have the
    same specificity. */

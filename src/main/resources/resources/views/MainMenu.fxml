@@ -26,7 +26,7 @@
                 <Button fx:id="btn_difficulty" onAction="#handleDifficulty" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Normal" />
                 <Button fx:id="btn_settings" onAction="#handleSettings" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Settings" />
                 <Button fx:id="btn_quit" onAction="#handleQuit" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Quit" />
-                <Label id="hint" text="Arrows move    P pause    TAB restart    ESC menu" />
+                <Label fx:id="hint" id="hint" text="Arrows move    P pause    TAB restart" />
             </children>
         </VBox>
     </children>

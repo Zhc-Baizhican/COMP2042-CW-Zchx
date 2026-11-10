@@ -3,7 +3,6 @@ package com.comp2042;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -21,8 +20,8 @@ public class GameController {
     private final AudioService audio = new AudioService();
     private final Random random = new Random();
 
-    public static KeyCode key = KeyCode.LEFT;
-    public static KeyCode lastKey = KeyCode.LEFT;
+    private Direction currentDirection = Direction.LEFT;
+    private Direction lastDirection = Direction.LEFT;
     private boolean keyPressed = false;
     private boolean paused = false;
 
@@ -43,15 +42,7 @@ public class GameController {
             return;
         } else {
 
-            if (key.equals(KeyCode.LEFT)) {
-                snek.move('L');
-            } else if (key.equals(KeyCode.RIGHT)) {
-                snek.move('R');
-            } else if (key.equals(KeyCode.UP)) {
-                snek.move('U');
-            } else if (key.equals(KeyCode.DOWN)) {
-                snek.move('D');
-            }
+            snek.move(currentDirection.toMoveChar());
 
             if (!snek.getDead() && snek.ateCoin(coin)) {
                 playCoinSound();
@@ -76,58 +67,68 @@ public class GameController {
     }));
 
     public void handle(KeyEvent event) {
-        // Arrow keys start the game loop, but must not restart it while paused:
-        // the overlay would stay up with the snake still moving underneath it.
-        if (event.getCode().isArrowKey() && !paused) {
-            animation.play();
+        Action action = KeyBindings.get().actionFor(event.getCode());
+        if (action == null) {
+            return;
         }
 
-        if (valKey(event.getCode()) && !keyPressed) {
-            lastKey = key;
-            key = event.getCode();
-            keyPressed = true;
-            gameView.turnDir(snek);
+        if (action.isMovement()) {
+            startMoving();
+            turnTowards(action.getDirection());
+            return;
         }
 
-        if (event.getCode().equals(KeyCode.P)) {
-            paused = !paused;
-            if (paused) {
-                animation.stop();
-            } else {
-                animation.play();
+        switch (action) {
+            case PAUSE -> togglePause();
+            case RESTART -> restart();
+            case FULLSCREEN_ON -> gameView.scaleToFullscreen(true, stage, obstacle, snek, coin);
+            case FULLSCREEN_OFF -> gameView.scaleToFullscreen(false, stage, obstacle, snek, coin);
+            case BACK_TO_MENU -> backToMenu();
+            default -> {
+                // Movement actions are handled above.
             }
-            gameView.updateStatus(snek, paused);
-        }
-
-        if (event.getCode().equals(KeyCode.TAB)) {
-            reset();
-            gameView.scoreLabel.setText("Score: " + game.getScorePoints());
-        }
-
-        if (event.getCode().equals(KeyCode.PLUS)) {
-            gameView.scaleToFullscreen(true, stage, obstacle, snek, coin);
-        }
-
-        if (event.getCode().equals(KeyCode.MINUS)) {
-            gameView.scaleToFullscreen(false, stage, obstacle, snek, coin);
-        }
-
-        if (event.getCode().equals(KeyCode.ESCAPE)) {
-            MainMenuController mainMenuController = new MainMenuController();
-            mainMenuController.getViewManager().getPrimaryStage().show();
-            mainMenuController.getViewManager().getGameStage().close();
         }
     }
 
-    private boolean valKey(KeyCode key) {
-        if (!key.isArrowKey()) return false;
-        else {
-            if (key.equals(KeyCode.LEFT)) if (!this.key.equals(KeyCode.RIGHT)) return true;
-            if (key.equals(KeyCode.RIGHT)) if (!this.key.equals(KeyCode.LEFT)) return true;
-            if (key.equals(KeyCode.DOWN)) if (!this.key.equals(KeyCode.DOWN)) return true;
-            if (key.equals(KeyCode.UP)) return !this.key.equals(KeyCode.DOWN);
-            return false;
+    /**
+     * Starts the game loop, but not while paused: the overlay would stay up
+     * with the snake still moving underneath it.
+     */
+    private void startMoving() {
+        if (!paused) {
+            animation.play();
         }
+    }
+
+    private void turnTowards(Direction direction) {
+        if (paused || keyPressed || direction.isOpposite(currentDirection)) {
+            return;
+        }
+        lastDirection = currentDirection;
+        currentDirection = direction;
+        keyPressed = true;
+        gameView.turnDir(snek, lastDirection, currentDirection);
+    }
+
+    private void togglePause() {
+        paused = !paused;
+        if (paused) {
+            animation.stop();
+        } else {
+            animation.play();
+        }
+        gameView.updateStatus(snek, paused);
+    }
+
+    private void restart() {
+        reset();
+        gameView.scoreLabel.setText("Score: " + game.getScorePoints());
+    }
+
+    private void backToMenu() {
+        MainMenuController mainMenuController = new MainMenuController();
+        mainMenuController.getViewManager().getPrimaryStage().show();
+        mainMenuController.getViewManager().getGameStage().close();
     }
 
     private void reset() {
@@ -139,7 +140,8 @@ public class GameController {
         coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
 
         animation.setRate(game.getSpeed());
-        key = KeyCode.LEFT;
+        currentDirection = Direction.LEFT;
+        lastDirection = Direction.LEFT;
         keyPressed = false;
         game.resetScore();
         obstacle.reset();

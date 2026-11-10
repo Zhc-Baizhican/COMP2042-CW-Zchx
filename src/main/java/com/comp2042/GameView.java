@@ -7,7 +7,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -187,16 +186,26 @@ public class GameView {
         gc.drawImage(rotatedImage, (point.x * game.getMultiplier()) * fullScale, (point.y * game.getMultiplier()) * fullScale, game.getMultiplier() * fullScale, game.getMultiplier() * fullScale);
     }
 
-    public void turnDir(Snake snek) {
-        if ((GameController.lastKey == KeyCode.LEFT && GameController.key == KeyCode.UP) || (GameController.lastKey == KeyCode.DOWN && GameController.key == KeyCode.RIGHT)) {
-            turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 2;
-        } else if ((GameController.lastKey == KeyCode.LEFT && GameController.key == KeyCode.DOWN) || (GameController.lastKey == KeyCode.UP && GameController.key == KeyCode.RIGHT)) {
-            turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 3;
-        } else if ((GameController.lastKey == KeyCode.RIGHT && GameController.key == KeyCode.UP) || (GameController.lastKey == KeyCode.DOWN && GameController.key == KeyCode.LEFT)) {
-            turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 1;
-        } else if ((GameController.lastKey == KeyCode.UP && GameController.key == KeyCode.LEFT) || (GameController.lastKey == KeyCode.RIGHT && GameController.key == KeyCode.DOWN)) {
-            turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 4;
-        } else turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = 0;
+    /**
+     * Records how the snake turned at its current head cell, so the correct
+     * corner sprite is drawn for that segment.
+     *
+     * @param snek the snake
+     * @param from the direction it was travelling before the turn
+     * @param to   the direction it now travels
+     */
+    public void turnDir(Snake snek, Direction from, Direction to) {
+        int value = 0;
+        if ((from == Direction.LEFT && to == Direction.UP) || (from == Direction.DOWN && to == Direction.RIGHT)) {
+            value = 2;
+        } else if ((from == Direction.LEFT && to == Direction.DOWN) || (from == Direction.UP && to == Direction.RIGHT)) {
+            value = 3;
+        } else if ((from == Direction.RIGHT && to == Direction.UP) || (from == Direction.DOWN && to == Direction.LEFT)) {
+            value = 1;
+        } else if ((from == Direction.UP && to == Direction.LEFT) || (from == Direction.RIGHT && to == Direction.DOWN)) {
+            value = 4;
+        }
+        turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = value;
     }
 
     /**
@@ -210,14 +219,21 @@ public class GameView {
     public void updateStatus(Snake snek, boolean paused) {
         String newline = System.lineSeparator();
         if (game.gameWon()) {
-            showStatus("YOU WON!", "Score: " + game.getScorePoints() + newline + "Press TAB to play again");
+            showStatus("YOU WON!", "Score: " + game.getScorePoints() + newline
+                    + "Press " + keyLabel(Action.RESTART) + " to play again");
         } else if (snek.getDead()) {
-            showStatus("GAME OVER", "Score: " + game.getScorePoints() + newline + "TAB restart        ESC menu");
+            showStatus("GAME OVER", "Score: " + game.getScorePoints() + newline
+                    + keyLabel(Action.RESTART) + " restart        " + keyLabel(Action.BACK_TO_MENU) + " menu");
         } else if (paused) {
-            showStatus("PAUSED", "Press P to resume");
+            showStatus("PAUSED", "Press " + keyLabel(Action.PAUSE) + " to resume");
         } else {
             hideStatus();
         }
+    }
+
+    /** Key name for the on-screen hints, so they follow a rebind. */
+    private String keyLabel(Action action) {
+        return KeyBindings.get().labelFor(action);
     }
 
     private void showStatus(String title, String detail) {

@@ -66,9 +66,11 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
 - Game over and level complete panels showing the final score and the restart keys
 - Main menu with logo, Start, difficulty selector (Normal / Hard / Easy) and Quit
-- Settings screen: sound on/off, volume slider, five snake colour presets, a day / night theme and three window sizes, saved to `~/.comp2042/settings.properties` and restored on the next launch
+- Settings screen: sound on/off, volume slider, five snake colour presets, a day / night theme, three window sizes and rebindable keys, saved to `~/.comp2042/settings.properties` and restored on the next launch
 - Night theme recolours the menu, the board and the obstacles, so obstacles stay visible
-- Unit tests (JUnit 5, `src/test/java`) — 14 tests on `Game`, run with `.\mvnw.cmd test`
+- Every control is rebindable: click a key in the settings screen and press the new one. A key can only drive one action, and clashes are reported instead of silently overwriting
+- On-screen hints (main menu, pause, game over) are generated from the current bindings, so they follow a rebind
+- Unit tests (JUnit 5, `src/test/java`) — 25 tests covering `Game`, `Direction` and `KeyBindings`, run with `.\mvnw.cmd test`
 
 ---
 
@@ -97,6 +99,9 @@ All under `src/main/java/com/comp2042/`.
 | `AudioService` | Loads the pickup sound once and plays it according to the sound settings |
 | `SettingsController` | Controller for the settings screen |
 | `ThemeManager` | Applies the day / night theme by toggling a style class on a scene root |
+| `Direction` | The four directions the snake travels, replacing raw character and key codes |
+| `Action` | Every keyboard action with its display name, default key and direction |
+| `KeyBindings` | The current key for each action, with reverse lookup for clash detection |
 
 ---
 
@@ -122,6 +127,10 @@ All under `src/main/java/com/comp2042/`.
 | `MainMenuController.java` | Applies the theme to the game scene | The game window would otherwise stay light while the menu turned dark |
 | `Settings.fxml` / `SettingsController.java` | Added the night-mode toggle and the three window-size buttons; theme changes repaint the settings window and the menu immediately | New controls for the theme and display settings |
 | `GameTest.java` | Resets the settings before each test and covers window scaling and the night board colour | `Settings` is a process-wide singleton, so tests had to start from a known state |
+| `GameController.java` | Input is resolved through `Action` / `KeyBindings` instead of comparing `KeyCode` values; direction is tracked as a `Direction`; the eight hard-coded key checks collapsed into one dispatch method | Keys had to be rebindable, and the old `valKey` helper compared keys rather than directions, so it could not survive a remap |
+| `GameView.java` | `turnDir` takes the previous and current `Direction` instead of reading two static `KeyCode` fields | The corner sprite depended on which physical key was pressed, which breaks as soon as a key is rebound |
+| `SettingsStore.java` | Loads and saves one `key.<ACTION>` entry per action | Key bindings have to survive a restart like the other settings |
+| `SettingsController.java` / `Settings.fxml` | Added the controls list: one row per action, click to capture a new key, with clash detection and an Esc cancel | The UI for rebinding, and the reason the window grew to 640 px |
 
 ---
 
