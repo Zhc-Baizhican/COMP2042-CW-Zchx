@@ -66,6 +66,7 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
 - Game over and level complete panels showing the final score and the restart keys
 - Main menu with logo, Start, difficulty selector (Normal / Hard / Easy) and Quit
+- Settings screen: sound on/off, volume slider and five snake colour presets, saved to `~/.comp2042/settings.properties` and restored on the next launch
 - Unit tests (JUnit 5, `src/test/java`) — 12 tests on `Game`, run with `.\mvnw.cmd test`
 
 ---
@@ -84,7 +85,16 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 
 ## 6. New Java Classes
 
-<!-- TODO: list every class added, with purpose and location -->
+All under `src/main/java/com/comp2042/`.
+
+| Class | Purpose |
+|---|---|
+| `Launcher` | Entry point for the packaged jar; launches `Main` without inheriting `Application`, which JavaFX requires when the modules are on the class path |
+| `Settings` | Shared settings model: sound, volume, snake skin, and fields reserved for the theme and key-binding screens |
+| `SettingsStore` | Loads and saves `Settings` as `~/.comp2042/settings.properties`, falling back to defaults on any read error |
+| `SnakeSkin` | Colour presets for the snake sprites, implemented as `ColorAdjust` effects |
+| `AudioService` | Loads the pickup sound once and plays it according to the sound settings |
+| `SettingsController` | Controller for the settings screen |
 
 ---
 
@@ -99,7 +109,12 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 | `Game.java` | Difficulty handled by a `switch` with a `default` branch; duplicated `powerUp` assignment removed; win check uses `>=`; `decMaxScore` now subtracts the value it is given | An unrecognised difficulty left `speed` at 0, which froze the animation; the win check could be skipped, and the previous `num - 1` arithmetic double-counted obstacles |
 | `GameView.java` | Fullscreen scale computed per axis and applied once; `fullScale * fullScale` corrected in head and body drawing; the two status labels were replaced by a single overlay with a title and a detail line; the stylesheet is now attached once at scene level | Sprite sizes were squared when scaled up, and the width scale was computed from the screen height; the old labels gave no restart hint and loaded the stylesheet three times by relative path |
 | `MainMenuController.java` | Added difficulty cycling, a Quit handler and a `@FXML` reference to the difficulty button; the chosen difficulty is passed to the game | The difficulty was a hard-coded constant, there was no way to quit, and the layout no longer uses the removed status labels |
-| `styling.css` | Deduplicated the button rules into `.menuButton` / `.primaryButton`, added hover and pressed states, restyled the score label as a HUD pill and added the `.statusOverlay` / `.statusTitle` / `.statusDetail` rules | The original file repeated the same four button properties twice and had no hover feedback; the in-game text had no backing panel and clashed with inline styles in `GameView` |
+| `styling.css` | Deduplicated the button rules into `.menuButton` / `.primaryButton`, added hover and pressed states, restyled the score label as a HUD pill, added the status overlay rules and the settings-screen rules | The original file repeated the same four button properties twice and had no hover feedback; the in-game text had no backing panel and clashed with inline styles in `GameView` |
+| `Snake.java` | Applies the chosen `SnakeSkin` to all four sprites; deleted the unused `headColor` / `bodyColor` fields and their getters | Those colour fields were never read by anything, because the snake is drawn from images |
+| `Main.java` | Loads the saved settings before building the view manager | Settings are needed before the first snake is created |
+| `ViewManager.java` | Adds the settings window, modal on the main menu | The main menu needed a way to reach the settings screen |
+| `MainMenu.fxml` / `MainMenuController.java` | Added a Settings button and its handler | New entry point for the settings screen |
+| `GameController.java` | Replaced the inline `MediaPlayer` and its loader with `AudioService` | Sound, volume and mute are now owned by one class instead of the game loop |
 
 ---
 
@@ -114,7 +129,5 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 | Tag | Meaning |
 |---|---|
 | `v0.0-baseline` | Original code as provided |
-| `v0.1-run` | All known bugs fixed, build and tests pass |
-| `v0.2-structured` | Package layout and decoupling complete |
-| `v0.3-levels` | Level system and gameplay additions |
-| `v1.0-submission` | Final submission state |
+| `v0.2-ui` | Main menu rebuilt with a logo, difficulty selector and Quit button |
+| `v0.3-hud` | In-game HUD pill, pause overlay and game over panel |

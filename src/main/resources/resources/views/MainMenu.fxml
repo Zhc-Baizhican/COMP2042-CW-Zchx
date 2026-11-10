@@ -13,9 +13,9 @@
         <URL value="@styling.css" />
     </stylesheets>
     <children>
-        <VBox alignment="CENTER" spacing="8.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="14.0">
+        <VBox alignment="CENTER" spacing="6.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="14.0">
             <children>
-                <ImageView fitHeight="92.0" fitWidth="92.0" preserveRatio="true">
+                <ImageView fitHeight="78.0" fitWidth="78.0" preserveRatio="true">
                     <image>
                         <Image url="@res/SnakeLogoWhite.png" />
                     </image>
@@ -24,6 +24,7 @@
                 <Button fx:id="btn_start" onAction="#handleStart" prefHeight="49.0" prefWidth="190.0" styleClass="primaryButton" text="Start" />
                 <Label id="difficultyLabel" text="DIFFICULTY" />
                 <Button fx:id="btn_difficulty" onAction="#handleDifficulty" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Normal" />
+                <Button fx:id="btn_settings" onAction="#handleSettings" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Settings" />
                 <Button fx:id="btn_quit" onAction="#handleQuit" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Quit" />
                 <Label id="hint" text="Arrows move    P pause    TAB restart    ESC menu" />
             </children>

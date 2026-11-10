@@ -102,3 +102,64 @@
     -fx-font-size: 13;
     -fx-text-fill: #d8d8d8;
 }
+
+/* ---------- settings screen ---------- */
+
+.settingsPane {
+    -fx-background-color: #ffffff;
+}
+
+#settingsTitle {
+    -fx-font-family: "SF Pixelate Shaded";
+    -fx-font-size: 30;
+}
+
+.sectionTitle {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 11;
+    -fx-text-fill: #9aa0a6;
+    -fx-padding: 4 0 0 0;
+}
+
+.settingLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 14;
+    -fx-text-fill: #3c4043;
+}
+
+.skinSwatch {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-padding: 0;
+    -fx-background-radius: 8;
+    -fx-background-insets: 0;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+    -fx-border-color: #d0d0d0;
+    -fx-cursor: hand;
+}
+
+.skinSwatch.selected {
+    -fx-border-width: 3;
+    -fx-border-color: #1f1f1f;
+}
+
+.skin-green {
+    -fx-background-color: #2eb872;
+}
+
+.skin-blue {
+    -fx-background-color: #3a9ad9;
+}
+
+.skin-purple {
+    -fx-background-color: #9b59b6;
+}
+
+.skin-amber {
+    -fx-background-color: #e0a02a;
+}
+
+.skin-mono {
+    -fx-background-color: #dddddd;
+}

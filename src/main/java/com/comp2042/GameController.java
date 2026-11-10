@@ -5,16 +5,12 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.net.URL;
 import java.util.Random;
 
 public class GameController {
-    private static final String COIN_SOUND_RESOURCE = "/resources/views/res/coinSound.wav";
 
     private Snake snek;
     private Coin coin;
@@ -22,7 +18,7 @@ public class GameController {
     private Game game;
     private Stage stage;
     private Obstacle obstacle;
-    private MediaPlayer coinSound;
+    private final AudioService audio = new AudioService();
     private final Random random = new Random();
 
     public static KeyCode key = KeyCode.LEFT;
@@ -38,7 +34,6 @@ public class GameController {
         this.stage = stage;
 
         this.obstacle = obstacle;
-        this.coinSound = loadSound(COIN_SOUND_RESOURCE);
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
     }
@@ -199,32 +194,8 @@ public class GameController {
         }
     }
 
-    /**
-     * Loads a sound clip from the classpath.
-     *
-     * @param resourcePath absolute classpath location, e.g. {@code /views/res/hit.wav}
-     * @return a ready player, or {@code null} when the clip cannot be loaded, so
-     *         that a missing audio file never stops the game from running
-     */
-    private MediaPlayer loadSound(String resourcePath) {
-        try {
-            URL url = getClass().getResource(resourcePath);
-            if (url == null) {
-                System.err.println("Sound resource not found: " + resourcePath);
-                return null;
-            }
-            return new MediaPlayer(new Media(url.toExternalForm()));
-        } catch (Exception e) {
-            System.err.println("Sound unavailable: " + resourcePath + " (" + e.getMessage() + ")");
-            return null;
-        }
-    }
-
+    /** Plays the pickup sound, subject to the sound settings. */
     private void playCoinSound() {
-        if (coinSound == null) {
-            return;
-        }
-        coinSound.stop();
-        coinSound.play();
+        audio.playCoin();
     }
 }

@@ -68,6 +68,11 @@ public class MainMenuController {
         Platform.exit();
     }
 
+    /** Opens the settings window on top of the main menu. */
+    public void handleSettings() {
+        viewManager.showSettings();
+    }
+
     private void launchSnake(Stage gameStage) {
         Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, DIFFICULTY_CYCLE[difficultyIndex]);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane maxHeight="400.0" maxWidth="480.0" minHeight="400.0" minWidth="480.0" prefHeight="400.0" prefWidth="480.0" styleClass="settingsPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.comp2042.SettingsController">
+    <stylesheets>
+        <URL value="@styling.css" />
+    </stylesheets>
+    <children>
+        <VBox alignment="TOP_CENTER" spacing="12.0" AnchorPane.bottomAnchor="18.0" AnchorPane.leftAnchor="26.0" AnchorPane.rightAnchor="26.0" AnchorPane.topAnchor="16.0">
+            <children>
+                <Label id="settingsTitle" text="SETTINGS" />
+                <Label styleClass="sectionTitle" text="SOUND" />
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label minWidth="92.0" styleClass="settingLabel" text="Sound" />
+                        <CheckBox fx:id="soundCheck" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <children>
+                        <Label minWidth="92.0" styleClass="settingLabel" text="Volume" />
+                        <Slider fx:id="volumeSlider" blockIncrement="0.05" max="1.0" min="0.0" prefWidth="210.0" />
+                        <Label fx:id="volumeValue" minWidth="48.0" styleClass="settingLabel" />
+                    </children>
+                </HBox>
+                <Label styleClass="sectionTitle" text="SNAKE COLOUR  —  click a swatch" />
+                <HBox fx:id="skinRow" alignment="CENTER" spacing="10.0" />
+                <Label fx:id="skinName" styleClass="settingLabel" text="Current: Green" />
+                <Button fx:id="btn_back" onAction="#handleBack" prefHeight="40.0" prefWidth="115.0" styleClass="menuButton" text="Back" />
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
