@@ -32,6 +32,7 @@ public class ViewManager {
         }
 
         Scene mainScene = new Scene(root);
+        ThemeManager.apply(root);
 
         primaryStage.setScene(mainScene);
         primaryStage.setResizable(false);
@@ -71,6 +72,7 @@ public class ViewManager {
                 exception.printStackTrace();
                 return;
             }
+            ThemeManager.apply(scene.getRoot());
 
             settingsStage = new Stage();
             settingsStage.initOwner(primaryStage);

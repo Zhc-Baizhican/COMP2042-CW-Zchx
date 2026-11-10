@@ -66,8 +66,9 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
 - Game over and level complete panels showing the final score and the restart keys
 - Main menu with logo, Start, difficulty selector (Normal / Hard / Easy) and Quit
-- Settings screen: sound on/off, volume slider and five snake colour presets, saved to `~/.comp2042/settings.properties` and restored on the next launch
-- Unit tests (JUnit 5, `src/test/java`) — 12 tests on `Game`, run with `.\mvnw.cmd test`
+- Settings screen: sound on/off, volume slider, five snake colour presets, a day / night theme and three window sizes, saved to `~/.comp2042/settings.properties` and restored on the next launch
+- Night theme recolours the menu, the board and the obstacles, so obstacles stay visible
+- Unit tests (JUnit 5, `src/test/java`) — 14 tests on `Game`, run with `.\mvnw.cmd test`
 
 ---
 
@@ -95,6 +96,7 @@ All under `src/main/java/com/comp2042/`.
 | `SnakeSkin` | Colour presets for the snake sprites, implemented as `ColorAdjust` effects |
 | `AudioService` | Loads the pickup sound once and plays it according to the sound settings |
 | `SettingsController` | Controller for the settings screen |
+| `ThemeManager` | Applies the day / night theme by toggling a style class on a scene root |
 
 ---
 
@@ -115,6 +117,11 @@ All under `src/main/java/com/comp2042/`.
 | `ViewManager.java` | Adds the settings window, modal on the main menu | The main menu needed a way to reach the settings screen |
 | `MainMenu.fxml` / `MainMenuController.java` | Added a Settings button and its handler | New entry point for the settings screen |
 | `GameController.java` | Replaced the inline `MediaPlayer` and its loader with `AudioService` | Sound, volume and mute are now owned by one class instead of the game loop |
+| `Game.java` | Board colour and cell size now come from the settings; `WINDOW_SCALES` maps the three window sizes onto the cell size | The background and the board size were fixed values, so the theme and window settings had nothing to change |
+| `Obstacle.java` | Obstacle colour depends on the theme | A black obstacle would be invisible on the night background |
+| `MainMenuController.java` | Applies the theme to the game scene | The game window would otherwise stay light while the menu turned dark |
+| `Settings.fxml` / `SettingsController.java` | Added the night-mode toggle and the three window-size buttons; theme changes repaint the settings window and the menu immediately | New controls for the theme and display settings |
+| `GameTest.java` | Resets the settings before each test and covers window scaling and the night board colour | `Settings` is a process-wide singleton, so tests had to start from a known state |
 
 ---
 

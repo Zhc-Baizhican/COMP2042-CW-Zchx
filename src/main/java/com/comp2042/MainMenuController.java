@@ -84,6 +84,7 @@ public class MainMenuController {
 
         StackPane gamePane = new StackPane();
         gameScene = new Scene(gamePane, game.getWidth() * game.getMultiplier(), game.getHeight() * game.getMultiplier());
+        ThemeManager.apply(gamePane);
 
         gameScene.setOnKeyPressed(controller::handle);
 

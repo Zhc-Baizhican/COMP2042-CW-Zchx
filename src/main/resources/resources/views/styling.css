@@ -163,3 +163,52 @@
 .skin-mono {
     -fx-background-color: #dddddd;
 }
+
+.optionButton {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 13;
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #4a4f57;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.optionButton:hover {
+    -fx-background-color: #5b616b;
+}
+
+.optionButton.selected {
+    -fx-background-color: #2eb872;
+}
+
+/* ---------- night theme ----------
+   Declared last so that they win over the light rules above, which have the
+   same specificity. */
+
+.dark {
+    -fx-background-color: #171a21;
+}
+
+.dark #title,
+.dark #settingsTitle {
+    -fx-text-fill: #eef1f5;
+}
+
+.dark #difficultyLabel,
+.dark #hint,
+.dark .sectionTitle {
+    -fx-text-fill: #7c8593;
+}
+
+.dark .settingLabel {
+    -fx-text-fill: #c9ced6;
+}
+
+.dark .skinSwatch.selected {
+    -fx-border-color: #eef1f5;
+}
+
+.dark #scoreLabel {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+}

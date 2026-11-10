@@ -13,7 +13,11 @@ import java.util.Set;
 public class Obstacle {
     private static final int MAX_OBSTACLES = 50;
 
-    private Color color = Color.BLACK;
+    private static final Color DAY_COLOR = Color.BLACK;
+    /** A black obstacle would be invisible on the night background. */
+    private static final Color NIGHT_COLOR = Color.web("7f8a9e");
+
+    private Color color;
     private ArrayList<Point> obstacles = new ArrayList<>();
     private int x;
     private int y;
@@ -21,6 +25,7 @@ public class Obstacle {
     public Obstacle(int x, int y) {
        this.x = x;
        this.y = y;
+       this.color = Settings.get().isDarkTheme() ? NIGHT_COLOR : DAY_COLOR;
     }
 
     /**

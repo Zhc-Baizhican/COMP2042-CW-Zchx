@@ -6,7 +6,17 @@ public class Game {
     private static final double NORMAL_SPEED = 8.5;
     private static final double HARD_SPEED = 13;
 
-    private Color color = Color.web("feffe4");
+    /**
+     * Cell size for the three window sizes offered in the settings screen.
+     * Index 0 keeps the original 400 px board, the larger options make every
+     * cell bigger so the grid stays square.
+     */
+    private static final double[] WINDOW_SCALES = {1.0, 1.5, 2.0};
+
+    private static final Color DEFAULT_BACKGROUND = Color.web("feffe4");
+    private static final Color DEFAULT_NIGHT_BACKGROUND = Color.web("1b1f27");
+
+    private Color color;
     private int width;
     private int height;
     private int score;
@@ -46,7 +56,11 @@ public class Game {
         // The snake starts with two cells (head plus one body segment) and grows
         // by exactly one cell per coin, so the board is full after this many coins.
         maxScore = x * y - 2;
-        multiplier = height > 50 ? 10 : 20;
+
+        Settings settings = Settings.get();
+        int scaleIndex = Math.max(0, Math.min(WINDOW_SCALES.length - 1, settings.getWindowSizeIndex()));
+        multiplier = (height > 50 ? 10 : 20) * WINDOW_SCALES[scaleIndex];
+        color = settings.isDarkTheme() ? DEFAULT_NIGHT_BACKGROUND : DEFAULT_BACKGROUND;
     }
 
     /**

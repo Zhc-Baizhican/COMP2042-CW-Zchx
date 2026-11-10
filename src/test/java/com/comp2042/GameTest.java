@@ -1,5 +1,6 @@
 package com.comp2042;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GameTest {
 
     private static final double EPSILON = 1e-9;
+
+    /**
+     * {@link Settings} is a process-wide singleton that can be restored from
+     * disk, so every test starts from the smallest window size and the light
+     * theme to stay deterministic.
+     */
+    @BeforeEach
+    void resetSettings() {
+        Settings.get().setWindowSizeIndex(0);
+        Settings.get().setDarkTheme(false);
+    }
 
     @Nested
     @DisplayName("board configuration")
@@ -45,6 +57,26 @@ class GameTest {
             Game game = new Game(20, 60, false, 'N');
 
             assertEquals(10.0, game.getMultiplier(), EPSILON);
+        }
+
+        @Test
+        @DisplayName("a larger window size scales the cell size")
+        void windowSizeScalesCells() {
+            Settings.get().setWindowSizeIndex(2);
+
+            Game game = new Game(20, 20, false, 'N');
+
+            assertEquals(40.0, game.getMultiplier(), EPSILON);
+        }
+
+        @Test
+        @DisplayName("the night theme uses a different board colour")
+        void nightThemeChangesBoardColour() {
+            Game day = new Game(20, 20, false, 'N');
+            Settings.get().setDarkTheme(true);
+            Game night = new Game(20, 20, false, 'N');
+
+            assertFalse(day.getColor().equals(night.getColor()));
         }
     }
 

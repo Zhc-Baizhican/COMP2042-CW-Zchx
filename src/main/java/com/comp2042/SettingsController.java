@@ -22,6 +22,7 @@ import javafx.stage.Window;
 public class SettingsController {
 
     private static final String SELECTED_STYLE = "selected";
+    private static final String[] WINDOW_SIZE_NAMES = {"Small", "Medium", "Large"};
 
     @FXML
     private CheckBox soundCheck;
@@ -37,6 +38,12 @@ public class SettingsController {
 
     @FXML
     private Label skinName;
+
+    @FXML
+    private CheckBox darkThemeCheck;
+
+    @FXML
+    private HBox sizeRow;
 
     /** Used to give audible feedback while adjusting the sound settings. */
     private final AudioService preview = new AudioService();
@@ -65,7 +72,54 @@ public class SettingsController {
 
         updateVolumeValue();
         buildSkinSwatches(settings);
+
+        darkThemeCheck.setSelected(settings.isDarkTheme());
+        darkThemeCheck.selectedProperty().addListener((observable, wasSelected, isSelected) -> {
+            settings.setDarkTheme(isSelected);
+            SettingsStore.save(settings);
+            applyThemeEverywhere();
+        });
+        buildWindowSizeButtons(settings);
+
         saveWhenWindowCloses();
+    }
+
+    private void buildWindowSizeButtons(Settings settings) {
+        for (int i = 0; i < WINDOW_SIZE_NAMES.length; i++) {
+            final int index = i;
+            Button button = new Button(WINDOW_SIZE_NAMES[i]);
+            button.getStyleClass().add("optionButton");
+            button.setUserData(index);
+            button.setPrefWidth(104);
+            button.setPrefHeight(34);
+            button.setOnAction(event -> {
+                settings.setWindowSizeIndex(index);
+                SettingsStore.save(settings);
+                highlightSelectedSize(index);
+            });
+            sizeRow.getChildren().add(button);
+        }
+        highlightSelectedSize(settings.getWindowSizeIndex());
+    }
+
+    private void highlightSelectedSize(int selected) {
+        for (Node node : sizeRow.getChildren()) {
+            node.getStyleClass().remove(SELECTED_STYLE);
+            if (node.getUserData() instanceof Integer index && index == selected) {
+                node.getStyleClass().add(SELECTED_STYLE);
+            }
+        }
+    }
+
+    /** Repaints this window and the menu behind it with the current theme. */
+    private void applyThemeEverywhere() {
+        if (skinRow.getScene() == null) {
+            return;
+        }
+        ThemeManager.apply(skinRow.getScene().getRoot());
+        if (skinRow.getScene().getWindow() instanceof Stage stage) {
+            ThemeManager.applyTo(stage.getOwner());
+        }
     }
 
     private void buildSkinSwatches(Settings settings) {
