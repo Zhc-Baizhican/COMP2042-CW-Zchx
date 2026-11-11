@@ -19,7 +19,7 @@ public final class Settings {
 
     // Reserved for the theme and display iteration.
     private boolean darkTheme = false;
-    private int windowSizeIndex = 1;
+    private int windowSizeIndex = 0;
 
     private Settings() {
         // Single shared instance; use Settings.get().

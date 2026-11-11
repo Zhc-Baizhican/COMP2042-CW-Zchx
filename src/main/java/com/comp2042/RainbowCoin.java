@@ -9,14 +9,18 @@ public class RainbowCoin extends Coin {
         super(x, y, snek, obstacle);
     }
 
+    public RainbowCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius) {
+        super(x, y, snek, obstacle, spawnRadius);
+    }
+
     public int getPoints() {
         int points = 5;
         return points;
     }
 
+    /** Extra animation rate this coin adds for the rest of the run. */
     public double getSpeedBonus() {
-        double speedBonus = 5;
-        return speedBonus;
+        return 5;
     }
 
     public Image getImage() {

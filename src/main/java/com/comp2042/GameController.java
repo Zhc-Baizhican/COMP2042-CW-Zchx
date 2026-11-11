@@ -11,6 +11,9 @@ import java.util.Random;
 
 public class GameController {
 
+    private static final int RESPAWN_PENALTY = 30;
+    private static final int EASY_COIN_RADIUS = 6;
+
     private Snake snek;
     private Coin coin;
     private GameView gameView;
@@ -24,6 +27,7 @@ public class GameController {
     private Direction lastDirection = Direction.LEFT;
     private boolean keyPressed = false;
     private boolean paused = false;
+    private int respawnsLeft;
 
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
@@ -33,38 +37,66 @@ public class GameController {
         this.stage = stage;
 
         this.obstacle = obstacle;
+        this.respawnsLeft = initialRespawns();
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
     }
 
-    private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+    /**
+     * Easy mode gives one automatic respawn; the other difficulties end the run
+     * the first time the snake dies.
+     *
+     * @return number of second chances for this run
+     */
+    private int initialRespawns() {
+        return game.isEasyMode() ? 1 : 0;
+    }
+
+    /** Coins spawn within this many cells of the head on easy mode. */
+    private int spawnRadius() {
+        return game.isEasyMode() ? EASY_COIN_RADIUS : 0;
+    }
+
+    private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
+
+    /**
+     * Advances the game by one cell.
+     *
+     * <p>This is the body of the animation tick. Easy mode calls it directly
+     * from a key press instead, which is what makes the snake wait for input
+     * rather than move on its own.</p>
+     */
+    private void step() {
         if (snek.getDead()) {
             return;
-        } else {
-
-            snek.move(currentDirection.toMoveChar());
-
-            if (!snek.getDead() && snek.ateCoin(coin)) {
-                playCoinSound();
-                powerCoin();
-                game.incScore();
-                if (game.gameWon()) {
-                    gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
-                    return;
-                }
-                newCoin();
-            }
-
-            keyPressed = false;
-
-            if (!snek.getDead()) {
-                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
-            }
-
-            gameView.updateStatus(snek, paused);
-            gameView.updateScoreLabel();
         }
-    }));
+
+        snek.move(currentDirection.toMoveChar());
+
+        if (snek.getDead() && tryRespawn()) {
+            return;
+        }
+
+        if (!snek.getDead() && snek.ateCoin(coin)) {
+            playCoinSound();
+            powerCoin();
+            game.incScore();
+            if (game.gameWon()) {
+                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                return;
+            }
+            newCoin();
+        }
+
+        keyPressed = false;
+
+        if (!snek.getDead()) {
+            gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        }
+
+        gameView.updateStatus(snek, paused);
+        gameView.updateScoreLabel();
+    }
 
     public void handle(KeyEvent event) {
         Action action = KeyBindings.get().actionFor(event.getCode());
@@ -73,8 +105,7 @@ public class GameController {
         }
 
         if (action.isMovement()) {
-            startMoving();
-            turnTowards(action.getDirection());
+            handleMovement(action.getDirection());
             return;
         }
 
@@ -91,13 +122,15 @@ public class GameController {
     }
 
     /**
-     * Starts the game loop, but not while paused: the overlay would stay up
-     * with the snake still moving underneath it.
+     * Starts the game loop and turns the snake. The loop is not restarted while
+     * paused: the overlay would stay up with the snake moving underneath it.
      */
-    private void startMoving() {
-        if (!paused) {
-            animation.play();
+    private void handleMovement(Direction direction) {
+        if (paused || snek.getDead()) {
+            return;
         }
+        animation.play();
+        turnTowards(direction);
     }
 
     private void turnTowards(Direction direction) {
@@ -122,52 +155,92 @@ public class GameController {
 
     private void restart() {
         reset();
-        gameView.scoreLabel.setText("Score: " + game.getScorePoints());
+        gameView.updateScoreLabel();
     }
 
     private void backToMenu() {
-        MainMenuController mainMenuController = new MainMenuController();
-        mainMenuController.getViewManager().getPrimaryStage().show();
-        mainMenuController.getViewManager().getGameStage().close();
+        // The window is reused, so the timer has to be stopped here: nothing
+        // else would stop the snake of an abandoned run.
+        animation.stop();
+        Main.getViewManager().showMenu();
     }
 
+    /** Full restart from the restart key: score and second chance are reset. */
     private void reset() {
+        game.resetScore();
+        respawnsLeft = initialRespawns();
+        resetBoard();
+    }
 
+    /**
+     * Rebuilds the snake and the coin without touching the score. Used by both
+     * the restart key and the easy-mode respawn, so the two paths cannot drift
+     * apart.
+     */
+    private void resetBoard() {
         animation.jumpTo(Duration.ZERO);
         animation.stop();
 
+        // Clear the obstacles first so the new coin cannot be placed on a cell
+        // that is about to become free again.
+        obstacle.reset();
+
         snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+        coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, spawnRadius());
 
         animation.setRate(game.getSpeed());
         currentDirection = Direction.LEFT;
         lastDirection = Direction.LEFT;
         keyPressed = false;
-        game.resetScore();
-        obstacle.reset();
-
         paused = false;
+
         gameView.updateStatus(snek, paused);
         gameView.updateScoreLabel();
-
         gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
     }
 
+    /**
+     * Spends the second chance if the difficulty grants one.
+     *
+     * @return {@code true} when the snake was respawned and the run continues
+     */
+    private boolean tryRespawn() {
+        if (respawnsLeft <= 0) {
+            return false;
+        }
+        respawnsLeft--;
+        game.addPoints(-RESPAWN_PENALTY);
+        resetBoard();
+        // resetBoard stops the timer for a manual restart; a respawn has to keep
+        // the snake moving, otherwise the run appears to freeze.
+        animation.play();
+        return true;
+    }
+
+    /**
+     * Applies the effect of the coin that was just eaten and awards its points.
+     *
+     * <p>Each coin carries its original effect: the rainbow coin speeds the game
+     * up, the silver coin litters the board with obstacles, and the blue coin
+     * lets the snake ignore the borders for a while. The very first coin of a
+     * run resets both modifiers, so no effect leaks between coins.</p>
+     */
     private void powerCoin() {
         animation.setRate(game.getSpeed());
         snek.ignoreBorders(false);
-        if (coin.getClass().equals(RainbowCoin.class)) {
-            RainbowCoin tempCoin = (RainbowCoin) coin;
-            animation.setRate(game.getSpeed() + tempCoin.getSpeedBonus());
-        } else if (coin.getClass().equals(SilverCoin.class)){
+
+        if (coin instanceof RainbowCoin rainbow) {
+            animation.setRate(game.getSpeed() + rainbow.getSpeedBonus());
+        } else if (coin instanceof SilverCoin) {
             int before = obstacle.getObstacles().size();
-            obstacle.newObstacles(snek, coin, random.nextInt(game.getWidth() * game.getHeight()/ 20) +3);
+            obstacle.newObstacles(snek, coin, random.nextInt(game.getWidth() * game.getHeight() / 20) + 3);
             // Only the cells actually added shrink the board; passing the running
             // total would subtract the same obstacles again on every silver coin.
             game.decMaxScore(obstacle.getObstacles().size() - before);
-        } else if (coin.getClass().equals(BlueCoin.class)) {
+        } else if (coin instanceof BlueCoin) {
             snek.ignoreBorders(true);
         }
+
         game.addPoints(coin.getPoints());
     }
 
@@ -181,18 +254,23 @@ public class GameController {
      * Each branch now has its own value.</p>
      */
     private void newCoin() {
+        int radius = spawnRadius();
         if (!game.isPowerUp()) {
-            coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+            coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
             return;
         }
 
         int ran = random.nextInt(12);
         switch (ran) {
-            case 1 -> coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            case 2 -> coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            case 3 -> coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            case 4 -> coin = new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            default -> coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+            case 1 -> coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            case 2 -> coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            case 3 -> coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            // The silver coin litters the board with obstacles, which is a hard
+            // mode mechanic only.
+            case 4 -> coin = game.isHardMode()
+                    ? new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius)
+                    : new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            default -> coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
         }
     }
 

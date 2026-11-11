@@ -247,7 +247,7 @@ public class GameView {
     }
 
     public void updateScoreLabel() {
-        scoreLabel.setText("Score: " + game.getScorePoints());
+        scoreLabel.setText("Score: " + game.getScorePoints() + " / " + game.getTargetScore());
     }
 
 }

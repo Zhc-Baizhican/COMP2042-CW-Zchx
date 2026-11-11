@@ -109,6 +109,16 @@
     -fx-background-color: #ffffff;
 }
 
+.playPane {
+    -fx-background-color: #ffffff;
+}
+
+.difficultyDescription {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 12;
+    -fx-text-fill: #5f6368;
+}
+
 #settingsTitle {
     -fx-font-family: "SF Pixelate Shaded";
     -fx-font-size: 30;
@@ -202,6 +212,16 @@
     -fx-padding: 0;
 }
 
+.settingsScroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.settingsScroll > .viewport {
+    -fx-background-color: transparent;
+}
+
 .keyScroll > .viewport {
     -fx-background-color: transparent;
 }
@@ -227,6 +247,10 @@
 
 .dark .settingLabel {
     -fx-text-fill: #c9ced6;
+}
+
+.dark .difficultyDescription {
+    -fx-text-fill: #a9b1bd;
 }
 
 .dark .skinSwatch.selected {

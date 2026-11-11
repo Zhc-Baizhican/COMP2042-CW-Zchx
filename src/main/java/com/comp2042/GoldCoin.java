@@ -9,6 +9,10 @@ public class GoldCoin extends Coin {
         super(x, y, snek, obstacle);
     }
 
+    public GoldCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius) {
+        super(x, y, snek, obstacle, spawnRadius);
+    }
+
     public Image getImage() {
         return image;
     }

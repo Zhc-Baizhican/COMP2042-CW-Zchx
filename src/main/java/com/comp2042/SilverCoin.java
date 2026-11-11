@@ -9,6 +9,10 @@ public class SilverCoin extends Coin {
         super(x, y, snek, obstacle);
     }
 
+    public SilverCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius) {
+        super(x, y, snek, obstacle, spawnRadius);
+    }
+
     public Image getImage() {
         return image;
     }

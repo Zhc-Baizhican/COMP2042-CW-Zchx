@@ -34,47 +34,40 @@ class GameTest {
     @DisplayName("board configuration")
     class BoardConfiguration {
 
+        /** Cell size used by most tests; the window decides it in the app. */
+        private static final double CELL = 20.0;
+
         @Test
         @DisplayName("width and height are stored")
         void storesDimensions() {
-            Game game = new Game(20, 15, false, 'N');
+            Game game = new Game(20, 15, false, 'N', CELL);
 
             assertEquals(20, game.getWidth());
             assertEquals(15, game.getHeight());
         }
 
         @Test
-        @DisplayName("short boards use a multiplier of 20")
-        void multiplierForShortBoard() {
-            Game game = new Game(20, 20, false, 'N');
+        @DisplayName("the cell size handed in by the view is used as-is")
+        void cellSizeIsStored() {
+            Game game = new Game(20, 20, false, 'N', 28.5);
 
-            assertEquals(20.0, game.getMultiplier(), EPSILON);
+            assertEquals(28.5, game.getMultiplier(), EPSILON);
         }
 
         @Test
-        @DisplayName("tall boards use a multiplier of 10")
-        void multiplierForTallBoard() {
-            Game game = new Game(20, 60, false, 'N');
+        @DisplayName("a tall board does not change the cell size")
+        void tallBoardKeepsCellSize() {
+            Game game = new Game(20, 60, false, 'N', CELL);
 
-            assertEquals(10.0, game.getMultiplier(), EPSILON);
-        }
-
-        @Test
-        @DisplayName("a larger window size scales the cell size")
-        void windowSizeScalesCells() {
-            Settings.get().setWindowSizeIndex(2);
-
-            Game game = new Game(20, 20, false, 'N');
-
-            assertEquals(40.0, game.getMultiplier(), EPSILON);
+            assertEquals(CELL, game.getMultiplier(), EPSILON);
         }
 
         @Test
         @DisplayName("the night theme uses a different board colour")
         void nightThemeChangesBoardColour() {
-            Game day = new Game(20, 20, false, 'N');
+            Game day = new Game(20, 20, false, 'N', CELL);
             Settings.get().setDarkTheme(true);
-            Game night = new Game(20, 20, false, 'N');
+            Game night = new Game(20, 20, false, 'N', CELL);
 
             assertFalse(day.getColor().equals(night.getColor()));
         }
@@ -90,7 +83,6 @@ class GameTest {
             Game game = new Game(20, 20, false, 'E');
 
             assertTrue(game.isNoBorder());
-            assertEquals(8.5, game.getSpeed(), EPSILON);
         }
 
         @Test
@@ -119,6 +111,44 @@ class GameTest {
             assertEquals(8.5, game.getSpeed(), EPSILON);
             assertFalse(game.isNoBorder());
         }
+
+        @Test
+        @DisplayName("only the hard preset counts as hard mode")
+        void onlyHardIsHardMode() {
+            assertTrue(new Game(20, 20, false, 'H').isHardMode());
+            assertFalse(new Game(20, 20, false, 'N').isHardMode());
+            assertFalse(new Game(20, 20, false, 'E').isHardMode());
+        }
+
+        @Test
+        @DisplayName("only easy is easy mode")
+        void onlyEasyIsEasyMode() {
+            assertTrue(new Game(20, 20, false, 'E').isEasyMode());
+            assertFalse(new Game(20, 20, false, 'N').isEasyMode());
+            assertFalse(new Game(20, 20, false, 'H').isEasyMode());
+        }
+
+        @Test
+        @DisplayName("points never drop below zero")
+        void pointsClampAtZero() {
+            Game game = new Game(20, 20, false, 'E');
+            game.addPoints(10);
+
+            game.addPoints(-30);
+
+            assertEquals(0, game.getScorePoints());
+        }
+
+        @Test
+        @DisplayName("easy is slower than normal, which is slower than hard")
+        void speedsIncreaseWithDifficulty() {
+            double easy = new Game(20, 20, false, 'E').getSpeed();
+            double normal = new Game(20, 20, false, 'N').getSpeed();
+            double hard = new Game(20, 20, false, 'H').getSpeed();
+
+            assertTrue(easy < normal, "easy should be slower than normal");
+            assertTrue(normal < hard, "normal should be slower than hard");
+        }
     }
 
     @Nested
@@ -131,6 +161,29 @@ class GameTest {
             Game game = new Game(10, 10, false, 'N');
 
             assertFalse(game.gameWon());
+        }
+
+        @Test
+        @DisplayName("easy asks for fewer points than normal, and hard for more")
+        void targetScoresIncreaseWithDifficulty() {
+            int easy = new Game(20, 20, false, 'E').getTargetScore();
+            int normal = new Game(20, 20, false, 'N').getTargetScore();
+            int hard = new Game(20, 20, false, 'H').getTargetScore();
+
+            assertTrue(easy < normal, "easy target should be lower than normal");
+            assertTrue(normal < hard, "hard target should be higher than normal");
+        }
+
+        @Test
+        @DisplayName("reaching the target score wins the run")
+        void reachingTheTargetWins() {
+            Game game = new Game(20, 20, false, 'E');
+
+            game.addPoints(game.getTargetScore() - 1);
+            assertFalse(game.gameWon());
+
+            game.addPoints(1);
+            assertTrue(game.gameWon());
         }
 
         @Test

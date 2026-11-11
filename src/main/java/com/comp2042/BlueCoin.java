@@ -9,6 +9,10 @@ public class BlueCoin extends Coin {
         super(x, y, snek, obstacle);
     }
 
+    public BlueCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius) {
+        super(x, y, snek, obstacle, spawnRadius);
+    }
+
     public int getPoints() {
         int points = 5;
         return points;

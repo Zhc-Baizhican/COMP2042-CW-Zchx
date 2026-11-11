@@ -13,8 +13,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -145,6 +143,7 @@ public class SettingsController {
                 settings.setWindowSizeIndex(index);
                 SettingsStore.save(settings);
                 highlightSelectedSize(index);
+                Main.getViewManager().applyWindowSize();
             });
             sizeRow.getChildren().add(button);
         }
@@ -240,34 +239,22 @@ public class SettingsController {
         volumeValue.setText(Math.round(volumeSlider.getValue() * 100) + "%");
     }
 
-    /** Repaints this window and the menu behind it with the current theme. */
+    /** Repaints the settings screen with the current theme. */
     private void applyThemeEverywhere() {
-        if (skinRow.getScene() == null) {
-            return;
-        }
-        ThemeManager.apply(skinRow.getScene().getRoot());
-        if (skinRow.getScene().getWindow() instanceof Stage stage) {
-            ThemeManager.applyTo(stage.getOwner());
+        if (skinRow.getScene() != null) {
+            ThemeManager.apply(skinRow.getScene().getRoot());
         }
     }
 
     private void saveWhenWindowCloses() {
-        // The scene is attached after initialisation, so defer the lookup.
-        Platform.runLater(() -> {
-            Window window = skinRow.getScene() == null ? null : skinRow.getScene().getWindow();
-            if (window != null) {
-                window.setOnHidden(event -> SettingsStore.save(Settings.get()));
-            }
-        });
+        // Settings are written on every change and again on Back; there is no
+        // separate window to close any more, so nothing extra is needed here.
     }
 
     @FXML
     private void handleBack() {
         SettingsStore.save(Settings.get());
         preview.stop();
-        Window window = skinRow.getScene() == null ? null : skinRow.getScene().getWindow();
-        if (window instanceof Stage stage) {
-            stage.close();
-        }
+        Main.getViewManager().closeSettings();
     }
 }
