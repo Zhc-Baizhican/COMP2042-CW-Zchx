@@ -118,6 +118,14 @@ public class Game {
     }
 
     /**
+     * Marks the run as won regardless of the score, for the "Win" hack.
+     */
+    public void winNow() {
+        scorePoints = Math.max(targetScore, scorePoints);
+        score = Math.max(maxScore, score);
+    }
+
+    /**
      * Reduces the number of coins needed to fill the board, because a cell
      * occupied by an obstacle can never be filled by the snake.
      *

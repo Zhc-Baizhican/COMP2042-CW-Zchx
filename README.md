@@ -66,7 +66,7 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
 - Game over and level complete panels showing the final score and the restart keys
 - Main menu with logo, Start, Settings and Quit; Start opens a separate difficulty page instead of hiding the choice behind one cycling button
-- Three difficulties on that page, each with a one-line description: Easy is slower, wraps around the walls, spawns coins near the snake and grants one automatic respawn (-30 points); Normal moves faster with deadly walls; Hard is the fastest and is the only mode that spawns the obstacle-adding silver coin
+- Three difficulties on that page, each with a one-line description: Easy is slower, the walls stop the snake instead of killing it, coins spawn near the snake and one automatic respawn is granted (-30 points); Normal moves faster with deadly walls; Hard is the fastest and is the only mode that spawns the obstacle-adding silver coin
 - Single application window: the menu, the game and the settings screen are scenes swapped inside one stage, so there is one taskbar entry and one fullscreen state
 - Settings screen: sound on/off, volume slider, five snake colour presets, a day / night theme, three window sizes and rebindable keys, saved to `~/.comp2042/settings.properties` and restored on the next launch
 - One fixed square window for every screen: the size setting (480 / 600 / 760 px) applies to the whole application, and the board scales its cell size to fit, so navigating never resizes the window
@@ -74,7 +74,9 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - A run is won by reaching the difficulty's target score: Easy 100, Normal 150, Hard 200. The HUD shows progress as `Score: 45 / 150`
 - Every control is rebindable: click a key in the settings screen and press the new one. A key can only drive one action, and clashes are reported instead of silently overwriting
 - On-screen hints (main menu, pause, game over) are generated from the current bindings, so they follow a rebind
-- Unit tests (JUnit 5, `src/test/java`) — 31 tests covering `Game`, `Direction` and `KeyBindings`, run with `.\mvnw.cmd test`
+- Hack mode: a list of rule-breaking entries reachable from the difficulty page, freely combinable and saved between runs
+- *Ghost board* lets the snake leave the board and drops coins in the transparent area around it; *Win* ends the run as a victory on the first key press
+- Unit tests (JUnit 5, `src/test/java`) — 34 tests covering `Game`, `Direction`, `KeyBindings` and `Cheats`, run with `.\mvnw.cmd test`
 
 ---
 
@@ -103,6 +105,9 @@ All under `src/main/java/com/comp2042/`.
 | `AudioService` | Loads the pickup sound once and plays it according to the sound settings |
 | `SettingsController` | Controller for the settings screen |
 | `PlayMenuController` | Controller for the difficulty page, which also builds and starts the game |
+| `Cheat` | One rule-breaking entry, with its name and description |
+| `Cheats` | Which entries are switched on; persisted with the other settings |
+| `CheatMenuController` | Controller for the hack list |
 | `ThemeManager` | Applies the day / night theme by toggling a style class on a scene root |
 | `Direction` | The four directions the snake travels, replacing raw character and key codes |
 | `Action` | Every keyboard action with its display name, default key and direction |
@@ -152,3 +157,4 @@ All under `src/main/java/com/comp2042/`.
 | `v0.0-baseline` | Original code as provided |
 | `v0.2-ui` | Main menu rebuilt with a logo, difficulty selector and Quit button |
 | `v0.3-hud` | In-game HUD pill, pause overlay and game over panel |
+| `v0.4-hacks` | Hack menu with the ghost board and instant-win entries, start prompt, pause menu, score drawn on the board |

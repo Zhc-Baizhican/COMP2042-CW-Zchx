@@ -53,7 +53,7 @@ public class MainMenuController {
                 keyLabel(Action.MOVE_LEFT),
                 keyLabel(Action.MOVE_DOWN),
                 keyLabel(Action.MOVE_RIGHT),
-                keyLabel(Action.PAUSE),
+                keyLabel(Action.PAUSE_MENU),
                 keyLabel(Action.RESTART)));
     }
 

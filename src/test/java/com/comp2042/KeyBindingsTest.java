@@ -46,7 +46,7 @@ class KeyBindingsTest {
     @DisplayName("a key resolves back to the action that owns it")
     void actionForFindsOwner() {
         assertEquals(Action.MOVE_UP, bindings.actionFor(KeyCode.UP));
-        assertEquals(Action.PAUSE, bindings.actionFor(KeyCode.P));
+        assertEquals(Action.PAUSE_MENU, bindings.actionFor(KeyCode.ESCAPE));
     }
 
     @Test
@@ -68,11 +68,11 @@ class KeyBindingsTest {
     @Test
     @DisplayName("resetToDefaults undoes any rebinding")
     void resetRestoresDefaults() {
-        bindings.bind(Action.PAUSE, KeyCode.SPACE);
+        bindings.bind(Action.PAUSE_MENU, KeyCode.SPACE);
 
         bindings.resetToDefaults();
 
-        assertEquals(KeyCode.P, bindings.keyFor(Action.PAUSE));
+        assertEquals(KeyCode.ESCAPE, bindings.keyFor(Action.PAUSE_MENU));
     }
 
     @Test

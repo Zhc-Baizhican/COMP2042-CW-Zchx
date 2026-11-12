@@ -29,6 +29,7 @@ public final class SettingsStore {
     private static final String KEY_THEME = "theme.dark";
     private static final String KEY_WINDOW_SIZE = "display.windowSizeIndex";
     private static final String KEY_PREFIX = "key.";
+    private static final String HACK_PREFIX = "hack.";
 
     private SettingsStore() {
         // Utility class.
@@ -67,6 +68,7 @@ public final class SettingsStore {
         settings.setDarkTheme(readBoolean(properties, KEY_THEME, settings.isDarkTheme()));
         settings.setWindowSizeIndex((int) readDouble(properties, KEY_WINDOW_SIZE, settings.getWindowSizeIndex()));
         loadKeyBindings(properties);
+        loadHacks(properties);
     }
 
     /**
@@ -82,6 +84,7 @@ public final class SettingsStore {
         properties.setProperty(KEY_THEME, Boolean.toString(settings.isDarkTheme()));
         properties.setProperty(KEY_WINDOW_SIZE, Integer.toString(settings.getWindowSizeIndex()));
         saveKeyBindings(properties);
+        saveHacks(properties);
 
         Path file = location();
         try {
@@ -114,6 +117,24 @@ public final class SettingsStore {
         KeyBindings bindings = KeyBindings.get();
         for (Action action : Action.values()) {
             properties.setProperty(KEY_PREFIX + action.name(), bindings.keyFor(action).name());
+        }
+    }
+
+    private static void loadHacks(Properties properties) {
+        Hacks hacks = Hacks.get();
+        hacks.disableAll();
+        for (Hack hack : Hack.values()) {
+            String raw = properties.getProperty(HACK_PREFIX + hack.name());
+            if (raw != null) {
+                hacks.setEnabled(hack, Boolean.parseBoolean(raw.trim()));
+            }
+        }
+    }
+
+    private static void saveHacks(Properties properties) {
+        Hacks hacks = Hacks.get();
+        for (Hack hack : Hack.values()) {
+            properties.setProperty(HACK_PREFIX + hack.name(), Boolean.toString(hacks.isEnabled(hack)));
         }
     }
 

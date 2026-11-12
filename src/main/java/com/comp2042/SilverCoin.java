@@ -13,6 +13,10 @@ public class SilverCoin extends Coin {
         super(x, y, snek, obstacle, spawnRadius);
     }
 
+    public SilverCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius, Coin.Area area) {
+        super(x, y, snek, obstacle, spawnRadius, area);
+    }
+
     public Image getImage() {
         return image;
     }

@@ -13,6 +13,7 @@ public class GameController {
 
     private static final int RESPAWN_PENALTY = 30;
     private static final int EASY_COIN_RADIUS = 6;
+    private static final int BOARD_CELLS = 20;
 
     private Snake snek;
     private Coin coin;
@@ -27,7 +28,10 @@ public class GameController {
     private Direction lastDirection = Direction.LEFT;
     private boolean keyPressed = false;
     private boolean paused = false;
+    private boolean started = false;
     private int respawnsLeft;
+    private boolean headLeftBoard = false;
+    private boolean spawnOnBoardNext = true;
 
     public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
         this.snek = snek;
@@ -38,6 +42,7 @@ public class GameController {
 
         this.obstacle = obstacle;
         this.respawnsLeft = initialRespawns();
+        this.gameView.setPauseActions(this::resumeFromPause, this::restart, this::backToMenu);
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
     }
@@ -52,9 +57,12 @@ public class GameController {
         return game.isEasyMode() ? 1 : 0;
     }
 
-    /** Coins spawn within this many cells of the head on easy mode. */
+    /**
+     * Coins spawn within this many cells of the head on easy mode, and on the
+     * ghost board so they follow the snake wherever it wanders.
+     */
     private int spawnRadius() {
-        return game.isEasyMode() ? EASY_COIN_RADIUS : 0;
+        return (game.isEasyMode() || Hacks.get().isEnabled(Hack.OFF_BOARD)) ? EASY_COIN_RADIUS : 0;
     }
 
     private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
@@ -72,6 +80,10 @@ public class GameController {
         }
 
         snek.move(currentDirection.toMoveChar());
+
+        if (!headLeftBoard && isHeadOffBoard()) {
+            headLeftBoard = true;
+        }
 
         if (snek.getDead() && tryRespawn()) {
             return;
@@ -95,12 +107,26 @@ public class GameController {
         }
 
         gameView.updateStatus(snek, paused);
-        gameView.updateScoreLabel();
     }
 
     public void handle(KeyEvent event) {
         Action action = KeyBindings.get().actionFor(event.getCode());
         if (action == null) {
+            return;
+        }
+
+        // The run does not begin until the player presses something: the first
+        // key press only dismisses the prompt.
+        if (!started) {
+            started = true;
+            gameView.hideStartPrompt();
+            if (Hacks.get().isEnabled(Hack.WIN)) {
+                game.winNow();
+                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                gameView.updateStatus(snek, paused);
+                return;
+            }
+            animation.play();
             return;
         }
 
@@ -110,14 +136,32 @@ public class GameController {
         }
 
         switch (action) {
-            case PAUSE -> togglePause();
+            case PAUSE_MENU -> openPauseMenu();
             case RESTART -> restart();
             case FULLSCREEN_ON -> gameView.scaleToFullscreen(true, stage, obstacle, snek, coin);
             case FULLSCREEN_OFF -> gameView.scaleToFullscreen(false, stage, obstacle, snek, coin);
-            case BACK_TO_MENU -> backToMenu();
             default -> {
                 // Movement actions are handled above.
             }
+        }
+    }
+
+    /** Resumes the run when the pause menu asks for it. */
+    private void resumeFromPause() {
+        if (paused) {
+            togglePause();
+        }
+    }
+
+    /**
+     * Pause menu on a live run; straight back to the menu once the run ended, so
+     * a finished game can never trap the player.
+     */
+    private void openPauseMenu() {
+        if (snek.getDead() || game.gameWon()) {
+            backToMenu();
+        } else {
+            togglePause();
         }
     }
 
@@ -155,7 +199,6 @@ public class GameController {
 
     private void restart() {
         reset();
-        gameView.updateScoreLabel();
     }
 
     private void backToMenu() {
@@ -186,7 +229,10 @@ public class GameController {
         obstacle.reset();
 
         snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, spawnRadius());
+        headLeftBoard = false;
+        spawnOnBoardNext = true;
+        Coin.Area area = Hacks.get().isEnabled(Hack.OFF_BOARD) ? Coin.Area.BOARD : Coin.Area.ANY;
+        coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, spawnRadius(), area);
 
         animation.setRate(game.getSpeed());
         currentDirection = Direction.LEFT;
@@ -195,7 +241,6 @@ public class GameController {
         paused = false;
 
         gameView.updateStatus(snek, paused);
-        gameView.updateScoreLabel();
         gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
     }
 
@@ -255,23 +300,59 @@ public class GameController {
      */
     private void newCoin() {
         int radius = spawnRadius();
+        Coin.Area area = spawnArea();
         if (!game.isPowerUp()) {
-            coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
             return;
         }
 
         int ran = random.nextInt(12);
         switch (ran) {
-            case 1 -> coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
-            case 2 -> coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
-            case 3 -> coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+            case 1 -> coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
+            case 2 -> coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
+            case 3 -> coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
             // The silver coin litters the board with obstacles, which is a hard
             // mode mechanic only.
             case 4 -> coin = game.isHardMode()
-                    ? new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius)
-                    : new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
-            default -> coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius);
+                    ? new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area)
+                    : new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
+            default -> coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
         }
+    }
+
+    /**
+     * Chooses the region the next coin may appear in.
+     *
+     * <p>On the ghost board the coins stay on the painted board until the snake
+     * first leaves it. From then on they alternate: one on the board, one in the
+     * transparent area around it.</p>
+     *
+     * @return the region for the next coin
+     */
+    private Coin.Area spawnArea() {
+        if (!Hacks.get().isEnabled(Hack.OFF_BOARD)) {
+            return Coin.Area.ANY;
+        }
+        if (!headLeftBoard) {
+            return Coin.Area.BOARD;
+        }
+        spawnOnBoardNext = !spawnOnBoardNext;
+        return spawnOnBoardNext ? Coin.Area.BOARD : Coin.Area.OUTSIDE;
+    }
+
+    /**
+     * @return {@code true} once the snake's head is outside the painted board
+     */
+    private boolean isHeadOffBoard() {
+        int columns = game.getWidth();
+        int rows = game.getHeight();
+        int boardColumns = Math.min(columns, BOARD_CELLS);
+        int boardRows = Math.min(rows, BOARD_CELLS);
+        int left = (columns - boardColumns) / 2;
+        int top = (rows - boardRows) / 2;
+        java.awt.Point head = snek.getHead();
+        return head.x < left || head.x >= left + boardColumns
+                || head.y < top || head.y >= top + boardRows;
     }
 
     /** Plays the pickup sound, subject to the sound settings. */

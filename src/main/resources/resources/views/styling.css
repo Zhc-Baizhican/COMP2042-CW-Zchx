@@ -10,6 +10,16 @@
 
 .root {
     -fx-background-color: #ffffff;
+    /* Every control inherits the pixel font; individual rules below only adjust
+       the size or weight. */
+    -fx-font-family: "SF Pixelate";
+    -fx-font-smoothing-type: gray;
+}
+
+/* The game scene root must stay see-through: JavaFX gives every scene root the
+   "root" class, and the white rule above would paint a frame around the board. */
+.root.gameScene {
+    -fx-background-color: transparent;
 }
 
 /* ---------- menu buttons ---------- */
@@ -18,10 +28,16 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 16;
     -fx-text-fill: #ffffff;
+    /* Clear the theme background and border so only the pixel-art image shows;
+       otherwise the transparent corners reveal the default button chrome. */
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
     -fx-background-image: url("res/btn.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
     -fx-background-insets: 0;
+    -fx-padding: 0;
     -fx-cursor: hand;
 }
 
@@ -37,10 +53,14 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 22;
     -fx-text-fill: #ffffff;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
     -fx-background-image: url("res/green_button04.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 190 49;
     -fx-background-insets: 0;
+    -fx-padding: 0;
     -fx-cursor: hand;
 }
 
@@ -79,16 +99,38 @@
     -fx-font-family: "SF Pixelate";
 }
 
+.check-box {
+    -fx-font-family: "SF Pixelate";
+}
+
+.button {
+    -fx-font-family: "SF Pixelate";
+}
+
+.slider {
+    -fx-font-family: "SF Pixelate";
+}
+
 #scoreLabel {
-    -fx-font-size: 18;
+    -fx-font-size: 13;
     -fx-text-fill: #ffffff;
-    -fx-background-color: rgba(0, 0, 0, 0.55);
-    -fx-background-radius: 6;
-    -fx-padding: 6 14 6 14;
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+    -fx-background-radius: 5;
+    -fx-padding: 3 10 3 10;
 }
 
 .statusOverlay {
     -fx-background-color: rgba(0, 0, 0, 0.62);
+}
+
+.startOverlay {
+    -fx-background-color: rgba(40, 44, 52, 0.72);
+}
+
+.startTitle {
+    -fx-font-family: "SF Pixelate Shaded";
+    -fx-font-size: 20;
+    -fx-text-fill: #ffffff;
 }
 
 .statusTitle {
@@ -111,6 +153,24 @@
 
 .playPane {
     -fx-background-color: #ffffff;
+}
+
+.hackPane {
+    -fx-background-color: #ffffff;
+}
+
+.hackContent {
+    -fx-padding: 16 26 16 26;
+}
+
+.hackCheck {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 12;
+    -fx-text-fill: #3c4043;
+}
+
+.dark .hackCheck {
+    -fx-text-fill: #c9ced6;
 }
 
 .difficultyDescription {
@@ -228,9 +288,13 @@
 
 /* ---------- night theme ----------
    Declared last so that they win over the light rules above, which have the
-   same specificity. */
+   same specificity. The background is only painted on the opaque menu panes:
+   the game scene must stay transparent around the board. */
 
-.dark {
+.dark#backgroundPane,
+.dark.playPane,
+.dark.settingsPane,
+.dark.hackPane {
     -fx-background-color: #171a21;
 }
 

@@ -14,6 +14,7 @@ public class Snake {
     private final int gy;
     private boolean ignoreBorders = false;
     private boolean noBorder;
+    private boolean wallBlocked = false;
     private Obstacle obstacle;
     private Image imgInputHead = new Image("resources/views/res/snakehead.png");
     private ImageView imageHead = new ImageView(imgInputHead);
@@ -52,6 +53,7 @@ public class Snake {
 
     public void move(char dir) {
         body.add(new Point(head));
+        wallBlocked = false;
         switch (dir) {
             case 'U':
                 snakeDir = 0;
@@ -59,8 +61,12 @@ public class Snake {
                 if (borderControl() && (!ignoreBorders && !noBorder) || obstacle.getObstacles().contains(head)) {
                     head.translate(0, 1);
                     dead = true;
-                } else if (borderControl() && (ignoreBorders || noBorder)) {
+                } else if (borderControl() && ignoreBorders) {
                     head.setLocation(head.getX(), gy - 1);
+                } else if (borderControl()) {
+                    // Easy mode: the wall stops the snake for this step.
+                    head.translate(0, 1);
+                    wallBlocked = true;
                 }
                 break;
 
@@ -70,8 +76,11 @@ public class Snake {
                 if (borderControl() && (!ignoreBorders && !noBorder) || obstacle.getObstacles().contains(head)) {
                     head.translate(0, -1);
                     dead = true;
-                } else if (borderControl() && (ignoreBorders || noBorder)) {
+                } else if (borderControl() && ignoreBorders) {
                     head.setLocation(head.getX(), 0);
+                } else if (borderControl()) {
+                    head.translate(0, -1);
+                    wallBlocked = true;
                 }
                 break;
 
@@ -81,8 +90,11 @@ public class Snake {
                 if (borderControl() && (!ignoreBorders && !noBorder) || obstacle.getObstacles().contains(head)) {
                     head.translate(1, 0);
                     dead = true;
-                } else if (borderControl() && (ignoreBorders || noBorder)) {
+                } else if (borderControl() && ignoreBorders) {
                     head.setLocation(gx - 1, head.getY());
+                } else if (borderControl()) {
+                    head.translate(1, 0);
+                    wallBlocked = true;
                 }
                 break;
 
@@ -92,8 +104,11 @@ public class Snake {
                 if (borderControl() && (!ignoreBorders && !noBorder) || obstacle.getObstacles().contains(head)) {
                     head.translate(-1, 0);
                     dead = true;
-                } else if (borderControl() && (ignoreBorders || noBorder)) {
+                } else if (borderControl() && ignoreBorders) {
                     head.setLocation(0, head.getY());
+                } else if (borderControl()) {
+                    head.translate(-1, 0);
+                    wallBlocked = true;
                 }
                 break;
         }
@@ -121,6 +136,11 @@ public class Snake {
     }
 
     private boolean borderControl() {
+        // The ghost-board hack removes the border rule entirely: the snake may
+        // walk off the visible board and come back.
+        if (Hacks.get().isEnabled(Hack.OFF_BOARD)) {
+            return false;
+        }
         return head.getX() < 0 || head.getY() < 0 || head.getX() >= gx || head.getY() >= gy;
     }
 
@@ -138,6 +158,14 @@ public class Snake {
 
     public boolean getDead() {
         return dead;
+    }
+
+    /**
+     * @return {@code true} when the last step was stopped by a wall instead of
+     *         killing the snake, so the view can hint a turn
+     */
+    public boolean isWallBlocked() {
+        return wallBlocked;
     }
 
     public void ignoreBorders(boolean ign) {

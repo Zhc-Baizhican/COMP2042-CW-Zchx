@@ -4,7 +4,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.IOException;
 
@@ -30,6 +32,8 @@ public class ViewManager {
     private final Stage stage = new Stage();
     private final Image snakeLogo = new Image("resources/views/res/SnakeLogoWhite.png");
 
+    private Stage gameStage;
+
     public ViewManager() {
     }
 
@@ -53,10 +57,13 @@ public class ViewManager {
     }
 
     /**
-     * @return pixels available for the board, after the padding on both sides
+     * @return pixels the game window gives the board. The board fills the
+     *         window: a margin only made sense while the window was transparent,
+     *         and it showed up as a dead border on machines where the
+     *         transparent stage is not supported.
      */
     public int boardSize() {
-        return windowSize() - 2 * BOARD_PADDING;
+        return windowSize();
     }
 
     /** Resizes the window to the stored setting without changing the scene. */
@@ -67,8 +74,10 @@ public class ViewManager {
 
     /** Shows the main menu, leaving fullscreen so the window fits the menu. */
     public void showMenu() {
+        closeGameWindow();
         stage.setFullScreen(false);
         show("/resources/views/MainMenu.fxml", "Snake Game");
+        stage.show();
     }
 
     /** Shows the difficulty page, where the game is started. */
@@ -81,20 +90,48 @@ public class ViewManager {
         show("/resources/views/Settings.fxml", "Settings");
     }
 
+    /** Shows the list of hack entries. */
+    public void showHackMenu() {
+        show("/resources/views/HackMenu.fxml", "Hacks");
+    }
+
     /**
-     * Shows a freshly built game scene.
+     * Shows a game scene in its own transparent window, so the area around the
+     * board shows the desktop instead of an opaque background.
      *
      * @param gameScene the scene created by the difficulty page
      */
     public void showGame(Scene gameScene) {
-        applyWindowSize();
-        stage.setScene(gameScene);
-        stage.setTitle("Snake Game");
+        if (gameStage == null) {
+            gameStage = new Stage(StageStyle.TRANSPARENT);
+            gameStage.getIcons().add(snakeLogo);
+            gameStage.setTitle("Snake Game");
+        }
+        gameScene.setFill(Color.TRANSPARENT);
+        gameStage.setScene(gameScene);
+        gameStage.sizeToScene();
+        if (gameScene.getWidth() > windowSize()) {
+            // A ghost-board run uses a screen-sized scene, so the window has to
+            // sit at the top-left of the screen.
+            gameStage.setX(0);
+            gameStage.setY(0);
+        } else {
+            gameStage.centerOnScreen();
+        }
+        gameStage.show();
+        stage.hide();
     }
 
     /** Returns from the settings screen to the menu. */
     public void closeSettings() {
         showMenu();
+    }
+
+    /** Hides the game window, if one is open. */
+    private void closeGameWindow() {
+        if (gameStage != null) {
+            gameStage.hide();
+        }
     }
 
     private void show(String resource, String title) {

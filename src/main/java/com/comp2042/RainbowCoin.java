@@ -13,6 +13,10 @@ public class RainbowCoin extends Coin {
         super(x, y, snek, obstacle, spawnRadius);
     }
 
+    public RainbowCoin(int x, int y, Snake snek, Obstacle obstacle, int spawnRadius, Coin.Area area) {
+        super(x, y, snek, obstacle, spawnRadius, area);
+    }
+
     public int getPoints() {
         int points = 5;
         return points;

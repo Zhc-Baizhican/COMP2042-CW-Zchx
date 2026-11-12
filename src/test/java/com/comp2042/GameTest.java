@@ -56,8 +56,7 @@ class GameTest {
 
         @Test
         @DisplayName("a tall board does not change the cell size")
-        void tallBoardKeepsCellSize() {
-            Game game = new Game(20, 60, false, 'N', CELL);
+        void tallBoardKeepsCellSize() {            Game game = new Game(20, 60, false, 'N', CELL);
 
             assertEquals(CELL, game.getMultiplier(), EPSILON);
         }
@@ -74,11 +73,35 @@ class GameTest {
     }
 
     @Nested
+    @DisplayName("win condition")
+    class WinCondition {
+
+        @Test
+        @DisplayName("a fresh run has not been won")
+        void freshRunIsNotWon() {
+            Game game = new Game(20, 20, false, 'N', 20.0);
+
+            assertFalse(game.gameWon());
+        }
+
+        @Test
+        @DisplayName("the Win hack marks the run as won straight away")
+        void winNowMarksTheRunWon() {
+            Game game = new Game(20, 20, false, 'N', 20.0);
+
+            game.winNow();
+
+            assertTrue(game.gameWon());
+            assertEquals(game.getTargetScore(), game.getScorePoints());
+        }
+    }
+
+    @Nested
     @DisplayName("difficulty")
     class Difficulty {
 
         @Test
-        @DisplayName("easy wraps around the borders")
+        @DisplayName("easy does not die at the borders")
         void easyWraps() {
             Game game = new Game(20, 20, false, 'E');
 

@@ -100,6 +100,20 @@ public class SettingsController {
         buildKeyRows();
         saveWhenWindowCloses();
         installKeyCapture();
+        installEscapeToMenu();
+    }
+
+    /** Escape leaves the settings screen, like the Back button. */
+    private void installEscapeToMenu() {
+        Platform.runLater(() -> {
+            if (skinRow.getScene() != null) {
+                skinRow.getScene().setOnKeyPressed(event -> {
+                    if (event.getCode() == KeyCode.ESCAPE && capturing == null) {
+                        handleBack();
+                    }
+                });
+            }
+        });
     }
 
     private void buildSkinSwatches(Settings settings) {

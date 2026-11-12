@@ -18,11 +18,10 @@ public enum Action {
     MOVE_LEFT("Move left", KeyCode.LEFT, Direction.LEFT),
     MOVE_RIGHT("Move right", KeyCode.RIGHT, Direction.RIGHT),
 
-    PAUSE("Pause", KeyCode.P, null),
     RESTART("Restart", KeyCode.TAB, null),
     FULLSCREEN_ON("Full screen", KeyCode.PLUS, null),
     FULLSCREEN_OFF("Windowed", KeyCode.MINUS, null),
-    BACK_TO_MENU("Back to menu", KeyCode.ESCAPE, null);
+    PAUSE_MENU("Pause menu", KeyCode.ESCAPE, null);
 
     private final String displayName;
     private final KeyCode defaultKey;

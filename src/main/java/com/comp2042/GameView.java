@@ -5,11 +5,14 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -22,20 +25,40 @@ public class GameView {
     public Canvas gridCanvas;
     public GraphicsContext gc;
 
-    public Label scoreLabel;
+    /** Prompt shown before the first key press. */
+    public StackPane startOverlay;
     public StackPane statusOverlay;
     private Label statusTitle;
     private Label statusDetail;
+    private VBox pauseButtons;
+    private Button resumeButton;
+    private Button restartButton;
+    private Button menuButton;
+    private Label startTitle;
+
+    private Runnable onResume;
+    private Runnable onRestart;
+    private Runnable onMainMenu;
 
     private Game game;
     private double initX;
     private double initY;
     private double fullScale = 1;
     private boolean fullsize = false;
-    private int[][] turnArray = new int[MainMenuController.getxValue()][MainMenuController.getyValue()];
+    /** Cells spanned by the painted board, regardless of how big the playfield is. */
+    private static final int BOARD_CELLS = 20;
+
+    /** Font used for the score painted on the canvas. */
+    private static final Font SCORE_FONT = loadScoreFont();
+
+    /** Colour of the "turn left or right" arrows shown at a wall. */
+    private static final Color WALL_HINT_COLOR = Color.web("#ffd166");
+
+    private int[][] turnArray;
 
     public GameView(Game game) {
         this.game = game;
+        this.turnArray = new int[game.getWidth()][game.getHeight()];
     }
 
     public void makeScene(Scene scene, Snake snek, Coin coin) {
@@ -48,9 +71,6 @@ public class GameView {
 
         addStylesheet(scene);
 
-        scoreLabel = new Label("Score: " + game.getScorePoints());
-        scoreLabel.setId("scoreLabel");
-
         statusTitle = new Label();
         statusTitle.getStyleClass().add("statusTitle");
         statusDetail = new Label();
@@ -58,14 +78,102 @@ public class GameView {
         statusDetail.setWrapText(true);
         statusDetail.setTextAlignment(TextAlignment.CENTER);
 
-        VBox statusBox = new VBox(statusTitle, statusDetail);
+        pauseButtons = buildPauseButtons();
+
+        VBox statusBox = new VBox(statusTitle, statusDetail, pauseButtons);
         statusBox.setAlignment(Pos.CENTER);
-        statusBox.setSpacing(12);
+        statusBox.setSpacing(10);
 
         statusOverlay = new StackPane(statusBox);
         statusOverlay.getStyleClass().add("statusOverlay");
-        statusOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         statusOverlay.setVisible(false);
+
+        startTitle = new Label("Press any key to start");
+        startTitle.getStyleClass().add("startTitle");
+        startOverlay = new StackPane(startTitle);
+        startOverlay.getStyleClass().add("startOverlay");
+
+        updateOverlayLayout();
+    }
+
+    /** Buttons shown only while the game is paused. */
+    private VBox buildPauseButtons() {
+        Button resume = new Button("Resume");
+        Button restart = new Button("Restart");
+        Button menu = new Button("Main menu");
+        for (Button button : new Button[]{resume, restart, menu}) {
+            button.getStyleClass().add("menuButton");
+            button.setPrefWidth(130);
+            button.setPrefHeight(36);
+            button.setFocusTraversable(false);
+        }
+        resume.setOnAction(event -> run(onResume));
+        restart.setOnAction(event -> run(onRestart));
+        menu.setOnAction(event -> run(onMainMenu));
+
+        resumeButton = resume;
+        restartButton = restart;
+        menuButton = menu;
+
+        VBox box = new VBox(resume, restart, menu);
+        box.setAlignment(Pos.CENTER);
+        box.setSpacing(8);
+        box.setVisible(false);
+        return box;
+    }
+
+    private void run(Runnable action) {
+        if (action != null) {
+            action.run();
+        }
+    }
+
+    /**
+     * Supplies what the pause-menu buttons should do.
+     *
+     * @param resume    resume the run
+     * @param restart   start a fresh run
+     * @param mainMenu  leave the game
+     */
+    public void setPauseActions(Runnable resume, Runnable restart, Runnable mainMenu) {
+        this.onResume = resume;
+        this.onRestart = restart;
+        this.onMainMenu = mainMenu;
+    }
+
+    /** Hides the "press any key" prompt once the run starts. */
+    public void hideStartPrompt() {
+        if (startOverlay != null) {
+            startOverlay.setVisible(false);
+        }
+    }
+
+    /**
+     * Pins the score bar and the status overlay to the painted board, so both
+     * stay over the board instead of stretching across a screen-sized window.
+     */
+    private void updateOverlayLayout() {
+        if (statusOverlay == null || startOverlay == null) {
+            return;
+        }
+        double cell = game.getMultiplier() * fullScale;
+        double boardSize = boardCells() * cell;
+        double boardLeft = gridOriginX() + (game.getWidth() - boardCells()) / 2.0 * cell;
+        double boardTop = gridOriginY() + (game.getHeight() - boardCells()) / 2.0 * cell;
+
+        // The overlay is clipped to the board: covering the transparent margin
+        // would paint a grey frame around the board.
+        StackPane.setAlignment(statusOverlay, Pos.TOP_LEFT);
+        statusOverlay.setPrefSize(boardSize, boardSize);
+        statusOverlay.setMaxSize(boardSize, boardSize);
+        statusOverlay.setTranslateX(boardLeft);
+        statusOverlay.setTranslateY(boardTop);
+
+        StackPane.setAlignment(startOverlay, Pos.TOP_LEFT);
+        startOverlay.setPrefSize(boardSize, boardSize);
+        startOverlay.setMaxSize(boardSize, boardSize);
+        startOverlay.setTranslateX(boardLeft);
+        startOverlay.setTranslateY(boardTop);
     }
 
     /** Attaches the stylesheet once, at the scene level, instead of per label. */
@@ -99,12 +207,15 @@ public class GameView {
             fullsize = false;
         }
 
+        updateOverlayLayout();
         drawGrid(coin, snek, obstacle, gc, false, 0);
     }
 
     public void drawGrid(Coin coin, Snake snek, Obstacle obstacle, GraphicsContext gc, boolean a, int b) {
-        gc.setFill(game.getColor());
-        gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
+        drawBoardBackground();
+
+        gc.save();
+        gc.translate(gridOriginX(), gridOriginY());
 
         gc.drawImage(coin.getImage(), (coin.getPos().x * game.getMultiplier()) * fullScale, (coin.getPos().y * game.getMultiplier()) * fullScale, game.getMultiplier() * fullScale - 3 * fullScale, game.getMultiplier() * fullScale - 3 * fullScale);
 
@@ -115,16 +226,24 @@ public class GameView {
         }
 
         drawHead(snek);
+
+        drawWallHint(gc, snek);
 
         gc.setFill(obstacle.getColor());
         for (Point point : obstacle.getObstacles()) {
             gc.fillRect(point.x * game.getMultiplier() * fullScale, point.y * game.getMultiplier() * fullScale, game.getMultiplier() * fullScale, game.getMultiplier() * fullScale);
         }
+
+        gc.restore();
+
+        drawScore();
     }
 
     private void drawGrid(Coin coin, Snake snek, GraphicsContext gc) {
-        gc.setFill(game.getColor());
-        gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
+        drawBoardBackground();
+
+        gc.save();
+        gc.translate(gridOriginX(), gridOriginY());
 
         gc.drawImage(coin.getImage(), (coin.getPos().x * game.getMultiplier()) * fullScale, (coin.getPos().y * game.getMultiplier()) * fullScale, game.getMultiplier() * fullScale - 3 * fullScale, game.getMultiplier() * fullScale - 3 * fullScale);
 
@@ -135,6 +254,80 @@ public class GameView {
         }
 
         drawHead(snek);
+
+        gc.restore();
+    }
+
+    /**
+     * Clears the canvas to transparent and paints the board in the middle. The
+     * surrounding margin is left transparent on purpose: the game window is a
+     * transparent stage, so the desktop shows through there.
+     */
+    private void drawBoardBackground() {
+        gc.clearRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
+        gc.setFill(game.getColor());
+        gc.fillRect(boardOriginX(), boardOriginY(), boardPixels(), boardPixels());
+    }
+
+    /**
+     * Pixels covered by the painted board. The ghost-board hack enlarges the
+     * playfield to the whole screen but keeps the board itself the same size, so
+     * this is capped at the original cell count.
+     */
+    private double boardPixels() {
+        return Math.min(game.getWidth(), BOARD_CELLS) * game.getMultiplier() * fullScale;
+    }
+
+    /** Left edge of the painted board inside the canvas. */
+    private double boardOriginX() {
+        return gridOriginX() + (game.getWidth() - boardCells()) / 2.0 * game.getMultiplier() * fullScale;
+    }
+
+    /** Top edge of the painted board inside the canvas. */
+    private double boardOriginY() {
+        return gridOriginY() + (game.getHeight() - boardCells()) / 2.0 * game.getMultiplier() * fullScale;
+    }
+
+    /** Number of cells the painted board spans. */
+    private double boardCells() {
+        return Math.min(Math.min(game.getWidth(), game.getHeight()), BOARD_CELLS);
+    }
+
+    /**
+     * Draws the score straight onto the canvas.
+     *
+     * <p>The canvas shares the board's coordinate system, so the text is always
+     * pinned to the painted board. A label in the layout was drifting away from
+     * the board whenever the window size and the playfield size differed.</p>
+     */
+    private void drawScore() {
+        if (gc == null) {
+            return;
+        }
+        String text = "Score: " + game.getScorePoints() + " / " + game.getTargetScore();
+        Text measure = new Text(text);
+        measure.setFont(SCORE_FONT);
+        double padding = 10;
+        double width = measure.getLayoutBounds().getWidth() + padding * 2;
+        double height = 20;
+        double x = boardOriginX() + (boardPixels() - width) / 2;
+        double y = boardOriginY() + 6;
+
+        gc.setFill(Color.rgb(0, 0, 0, 0.45));
+        gc.fillRoundRect(x, y, width, height, 10, 10);
+        gc.setFill(Color.WHITE);
+        gc.setFont(SCORE_FONT);
+        gc.fillText(text, x + padding, y + height - 6);
+    }
+
+    /** Left edge of the whole playfield inside the canvas. */
+    private double gridOriginX() {
+        return (gridCanvas.getWidth() - game.getWidth() * game.getMultiplier() * fullScale) / 2;
+    }
+
+    /** Top edge of the whole playfield inside the canvas. */
+    private double gridOriginY() {
+        return (gridCanvas.getHeight() - game.getHeight() * game.getMultiplier() * fullScale) / 2;
     }
 
     private void drawHead(Snake snek) {
@@ -167,8 +360,8 @@ public class GameView {
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);
             rotatedImage = snek.getImageViewTail().snapshot(params, null);
-        } else if (index > 0 && (turnArray[(int) snek.getBody().get(index).getX()][(int) snek.getBody().get(index).getY()] != 0)) {
-            snek.getImageViewTurn().setRotate(90 * turnArray[(int) snek.getBody().get(index).getX()][(int) snek.getBody().get(index).getY()]);
+        } else if (index > 0 && turnValueAt(snek.getBody().get(index)) != 0) {
+            snek.getImageViewTurn().setRotate(90 * turnValueAt(snek.getBody().get(index)));
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);
             rotatedImage = snek.getImageViewTurn().snapshot(params, null);
@@ -179,11 +372,35 @@ public class GameView {
             rotatedImage = snek.getImageViewBody().snapshot(params, null);
         }
 
-        if (turnArray[(int) snek.getBody().get(0).getX()][(int) snek.getBody().get(0).getY()] != 0) {
-            turnArray[(int) snek.getBody().get(0).getX()][(int) snek.getBody().get(0).getY()] = 0;
-        }
+        setTurnValue(snek.getBody().get(0), 0);
 
         gc.drawImage(rotatedImage, (point.x * game.getMultiplier()) * fullScale, (point.y * game.getMultiplier()) * fullScale, game.getMultiplier() * fullScale, game.getMultiplier() * fullScale);
+    }
+
+    /**
+     * @return {@code true} when the cell is inside the board
+     */
+    private boolean insideBoard(int x, int y) {
+        return x >= 0 && y >= 0 && x < game.getWidth() && y < game.getHeight();
+    }
+
+    /**
+     * Reads the recorded turn for a cell. Cells outside the board have no
+     * sprite bookkeeping, which matters once a hack lets the snake leave it.
+     */
+    private int turnValueAt(Point point) {
+        int x = (int) point.getX();
+        int y = (int) point.getY();
+        return insideBoard(x, y) ? turnArray[x][y] : 0;
+    }
+
+    /** Records a turn for a cell, ignoring cells outside the board. */
+    private void setTurnValue(Point point, int value) {
+        int x = (int) point.getX();
+        int y = (int) point.getY();
+        if (insideBoard(x, y)) {
+            turnArray[x][y] = value;
+        }
     }
 
     /**
@@ -205,7 +422,7 @@ public class GameView {
         } else if ((from == Direction.UP && to == Direction.LEFT) || (from == Direction.RIGHT && to == Direction.DOWN)) {
             value = 4;
         }
-        turnArray[(int) snek.getHead().getX()][(int) snek.getHead().getY()] = value;
+        setTurnValue(snek.getHead(), value);
     }
 
     /**
@@ -217,17 +434,70 @@ public class GameView {
      * @param paused whether the player has paused the game
      */
     public void updateStatus(Snake snek, boolean paused) {
-        String newline = System.lineSeparator();
-        if (game.gameWon()) {
-            showStatus("YOU WON!", "Score: " + game.getScorePoints() + newline
-                    + "Press " + keyLabel(Action.RESTART) + " to play again");
-        } else if (snek.getDead()) {
-            showStatus("GAME OVER", "Score: " + game.getScorePoints() + newline
-                    + keyLabel(Action.RESTART) + " restart        " + keyLabel(Action.BACK_TO_MENU) + " menu");
+        boolean won = game.gameWon();
+        boolean dead = snek.getDead();
+
+        if (won) {
+            showStatus("YOU WON!", "Score: " + game.getScorePoints());
+        } else if (dead) {
+            showStatus("GAME OVER", "Score: " + game.getScorePoints());
         } else if (paused) {
-            showStatus("PAUSED", "Press " + keyLabel(Action.PAUSE) + " to resume");
+            showStatus("PAUSED", "Score: " + game.getScorePoints() + " / " + game.getTargetScore());
         } else {
             hideStatus();
+            showMenuButtons(false, false, false);
+            return;
+        }
+
+        // A finished run keeps the menu buttons so the player can still leave;
+        // only a live pause offers Resume.
+        showMenuButtons(true, paused && !dead && !won, true);
+    }
+
+    /**
+     * Shows or hides the pause-menu buttons individually.
+     *
+     * @param visible       whether the button block is shown at all
+     * @param showResume    whether Resume applies to the current state
+     * @param showExit      whether Restart and Main menu apply
+     */
+    private void showMenuButtons(boolean visible, boolean showResume, boolean showExit) {
+        if (pauseButtons == null) {
+            return;
+        }
+        pauseButtons.setVisible(visible);
+        resumeButton.setVisible(showResume);
+        restartButton.setVisible(showExit);
+        menuButton.setVisible(showExit);
+    }
+
+    /**
+     * Draws small arrows beside the head when a wall stopped the snake, pointing
+     * left and right so the player knows which way is still open.
+     */
+    private void drawWallHint(GraphicsContext gc, Snake snek) {
+        if (!snek.isWallBlocked()) {
+            return;
+        }
+        double cell = game.getMultiplier() * fullScale;
+        Point head = snek.getHead();
+        double centreY = head.y * cell + cell / 2;
+        double size = cell * 0.26;
+
+        gc.setFill(WALL_HINT_COLOR);
+        if (head.x > 0) {
+            // Arrow in the cell to the left, pointing outwards.
+            double cx = (head.x - 0.5) * cell;
+            gc.fillPolygon(
+                    new double[]{cx - size, cx + size, cx + size},
+                    new double[]{centreY, centreY - size, centreY + size}, 3);
+        }
+        if (head.x < game.getWidth() - 1) {
+            // Arrow in the cell to the right, pointing outwards.
+            double cx = (head.x + 1.5) * cell;
+            gc.fillPolygon(
+                    new double[]{cx + size, cx - size, cx - size},
+                    new double[]{centreY, centreY - size, centreY + size}, 3);
         }
     }
 
@@ -246,8 +516,19 @@ public class GameView {
         statusOverlay.setVisible(false);
     }
 
-    public void updateScoreLabel() {
-        scoreLabel.setText("Score: " + game.getScorePoints() + " / " + game.getTargetScore());
+    /** Loads the pixel font for the score, falling back to a system font. */
+    private static Font loadScoreFont() {
+        try (java.io.InputStream stream = GameView.class.getResourceAsStream("/resources/views/res/SFPixelate.ttf")) {
+            if (stream != null) {
+                Font loaded = Font.loadFont(stream, 13);
+                if (loaded != null) {
+                    return loaded;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load the score font: " + e.getMessage());
+        }
+        return Font.font("Consolas", 13);
     }
 
 }
