@@ -7,6 +7,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Random;
 
 public class GameController {
@@ -45,6 +50,42 @@ public class GameController {
         this.gameView.setPauseActions(this::resumeFromPause, this::restart, this::backToMenu);
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
+        clock.setCycleCount(Animation.INDEFINITE);
+        clock.play();
+    }
+
+    /**
+     * Refreshes the clock on the board, redrawing only when the text changes.
+     */
+    private void updateTimer() {
+        // The clock is created before the scene exists, so the first ticks can
+        // arrive while there is still no canvas to draw on.
+        if (gameView.gc == null) {
+            return;
+        }
+        if (gameView.setTimerText(formatTime(elapsedSeconds()))) {
+            gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        }
+    }
+
+    /**
+     * @return seconds spent in the run so far, not counting paused time
+     */
+    private long elapsedSeconds() {
+        long now = System.nanoTime();
+        long running = now - startNanos - pausedNanos;
+        if (pausedAt != 0) {
+            running -= now - pausedAt;
+        }
+        return Math.max(0, running / 1_000_000_000L);
+    }
+
+    /**
+     * @param seconds elapsed seconds
+     * @return the time as {@code mm:ss}
+     */
+    private static String formatTime(long seconds) {
+        return String.format("%02d:%02d", seconds / 60, seconds % 60);
     }
 
     /**
@@ -68,6 +109,21 @@ public class GameController {
     private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> step()));
 
     /**
+     * Updates the run clock. Separate from the snake timer, because the clock has
+     * to tick at a readable rate no matter how fast the snake moves.
+     */
+    private final Timeline clock = new Timeline(new KeyFrame(Duration.millis(200), event -> updateTimer()));
+
+    /** When the run started counting, in nanoseconds; 0:00 is the start prompt. */
+    private long startNanos = System.nanoTime();
+    private long pausedNanos = 0;
+    private long pausedAt = 0;
+    private long finalSeconds = -1;
+
+    /** Seconds the player waited on the start prompt before pressing a key. */
+    private long idleSeconds = 0;
+
+    /**
      * Advances the game by one cell.
      *
      * <p>This is the body of the animation tick. Easy mode calls it directly
@@ -75,7 +131,11 @@ public class GameController {
      * rather than move on its own.</p>
      */
     private void step() {
-        if (snek.getDead()) {
+        // A finished run must not keep moving: the timeline would otherwise
+        // carry on steering, eating the coin that was never replaced, and
+        // scoring points after the game already ended.
+        if (snek.getDead() || game.gameWon()) {
+            animation.stop();
             return;
         }
 
@@ -85,16 +145,27 @@ public class GameController {
             headLeftBoard = true;
         }
 
-        if (snek.getDead() && tryRespawn()) {
+        if (snek.getDead()) {
+            if (tryRespawn()) {
+                return;
+            }
+            animation.stop();
+            finishClock();
+            recordRun(false);
+            gameView.updateStatus(snek, paused);
             return;
         }
 
-        if (!snek.getDead() && snek.ateCoin(coin)) {
+        if (snek.ateCoin(coin)) {
             playCoinSound();
             powerCoin();
             game.incScore();
             if (game.gameWon()) {
+                animation.stop();
+                finishClock();
+                recordRun(true);
                 gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                gameView.updateStatus(snek, paused);
                 return;
             }
             newCoin();
@@ -102,10 +173,7 @@ public class GameController {
 
         keyPressed = false;
 
-        if (!snek.getDead()) {
-            gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
-        }
-
+        gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
         gameView.updateStatus(snek, paused);
     }
 
@@ -119,9 +187,16 @@ public class GameController {
         // key press only dismisses the prompt.
         if (!started) {
             started = true;
+            idleSeconds = elapsedSeconds();
             gameView.hideStartPrompt();
             if (Hacks.get().isEnabled(Hack.WIN)) {
+                // The run ends the moment it starts, but it still counts as a
+                // finished run: it has to be recorded and scored for badges, or
+                // the waiting secret could never fire.
                 game.winNow();
+                animation.stop();
+                finishClock();
+                recordRun(true);
                 gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
                 gameView.updateStatus(snek, paused);
                 return;
@@ -170,7 +245,7 @@ public class GameController {
      * paused: the overlay would stay up with the snake moving underneath it.
      */
     private void handleMovement(Direction direction) {
-        if (paused || snek.getDead()) {
+        if (paused || snek.getDead() || game.gameWon()) {
             return;
         }
         animation.play();
@@ -190,9 +265,16 @@ public class GameController {
     private void togglePause() {
         paused = !paused;
         if (paused) {
+            pausedAt = System.nanoTime();
             animation.stop();
+            clock.stop();
         } else {
+            if (pausedAt != 0) {
+                pausedNanos += System.nanoTime() - pausedAt;
+                pausedAt = 0;
+            }
             animation.play();
+            clock.play();
         }
         gameView.updateStatus(snek, paused);
     }
@@ -213,6 +295,27 @@ public class GameController {
         game.resetScore();
         respawnsLeft = initialRespawns();
         resetBoard();
+        resetClock();
+    }
+
+    /** Puts the run clock back to 0:00 and starts it again. */
+    private void resetClock() {
+        startNanos = System.nanoTime();
+        pausedNanos = 0;
+        pausedAt = 0;
+        finalSeconds = -1;
+        idleSeconds = 0;
+        gameView.setTimerText("00:00");
+        gameView.setEarnedBadges(List.of());
+        clock.play();
+    }
+
+    /** Freezes the clock; the recorded time is the time of the deciding step. */
+    private void finishClock() {
+        if (finalSeconds < 0) {
+            finalSeconds = elapsedSeconds();
+        }
+        clock.stop();
     }
 
     /**
@@ -358,5 +461,34 @@ public class GameController {
     /** Plays the pickup sound, subject to the sound settings. */
     private void playCoinSound() {
         audio.playCoin();
+    }
+
+    /**
+     * Stores a finished run, with a picture of the board, for the history
+     * screen. Called once per run: the timeline is stopped first, so the step
+     * that follows returns immediately.
+     *
+     * @param won whether the run ended in a win
+     */
+    private void recordRun(boolean won) {
+        String imageName = "";
+        Path shot = Paths.get(RunHistory.get().getShotsDirectory().toString(),
+                "run-" + System.currentTimeMillis() + ".png");
+        if (gameView.captureBoard(shot.toFile())) {
+            imageName = shot.getFileName().toString();
+        }
+
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        long seconds = finalSeconds >= 0 ? finalSeconds : elapsedSeconds();
+        int length = snek.getBody().size() + 1;
+        String hacks = Hacks.get().describeEnabled();
+
+        RunSummary summary = new RunSummary(won, game.getModeName(), game.getScorePoints(),
+                length, seconds, hacks, idleSeconds);
+        gameView.setEarnedBadges(Achievements.get().evaluate(summary));
+
+        RunRecord record = new RunRecord(stamp, game.getModeName(), won,
+                game.getScorePoints(), length, hacks, imageName, formatTime(seconds));
+        RunHistory.get().add(record);
     }
 }

@@ -12,8 +12,11 @@ public class Game {
      * run can actually be finished instead of only ending in a collision.
      */
     private static final int EASY_TARGET = 100;
-    private static final int NORMAL_TARGET = 150;
-    private static final int HARD_TARGET = 200;
+    private static final int NORMAL_TARGET = 200;
+    private static final int HARD_TARGET = 250;
+
+    /** Difficulty code of the endless preset, which has no score target. */
+    public static final char ENDLESS = 'X';
 
     private static final Color DEFAULT_BACKGROUND = Color.web("feffe4");
     private static final Color DEFAULT_NIGHT_BACKGROUND = Color.web("1b1f27");
@@ -76,6 +79,13 @@ public class Game {
                 noBorder = false;
                 targetScore = NORMAL_TARGET;
             }
+            case ENDLESS -> {
+                // Classic snake: no score target, the board itself is the goal,
+                // so gameWon() can only fire once the snake fills it.
+                speed = NORMAL_SPEED;
+                noBorder = false;
+                targetScore = Integer.MAX_VALUE;
+            }
             default -> {
                 speed = NORMAL_SPEED;
                 noBorder = false;
@@ -111,6 +121,42 @@ public class Game {
      */
     public int getTargetScore() {
         return targetScore;
+    }
+
+    /**
+     * @return {@code true} when the run has no score target and is won by
+     *         filling the whole board
+     */
+    public boolean isEndless() {
+        return difficulty == ENDLESS;
+    }
+
+    /**
+     * @return the mode name shown on the difficulty page and in the history
+     */
+    public String getModeName() {
+        return switch (difficulty) {
+            case 'E' -> "Easy";
+            case 'H' -> "Hard";
+            case ENDLESS -> "Endless";
+            default -> "Normal";
+        };
+    }
+
+    /**
+     * @return the number of coins that fill the board, which is the win
+     *         condition of the endless preset
+     */
+    public int getMaxScore() {
+        return maxScore;
+    }
+
+    /**
+     * @return the score the HUD should count towards: the difficulty target, or
+     *         the board capacity in endless mode
+     */
+    public int getWinTarget() {
+        return isEndless() ? maxScore : targetScore;
     }
 
     public void incScore() {

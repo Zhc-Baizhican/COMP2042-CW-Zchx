@@ -36,6 +36,16 @@ public class MainMenuController {
         viewManager.showSettings();
     }
 
+    /** Opens the list of finished runs. */
+    public void handleHistory() {
+        viewManager.showHistory();
+    }
+
+    /** Opens the badge list. */
+    public void handleBadges() {
+        viewManager.showAchievements();
+    }
+
     public void handleQuit() {
         Platform.exit();
     }

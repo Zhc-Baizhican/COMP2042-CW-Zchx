@@ -97,6 +97,36 @@ class GameTest {
     }
 
     @Nested
+    @DisplayName("endless mode")
+    class EndlessMode {
+
+        @Test
+        @DisplayName("endless has no score target, only the board to fill")
+        void endlessHasNoTarget() {
+            Game game = new Game(20, 20, false, Game.ENDLESS, 20.0);
+
+            assertTrue(game.isEndless());
+            assertEquals(Integer.MAX_VALUE, game.getTargetScore());
+            assertEquals(game.getMaxScore(), game.getWinTarget());
+        }
+
+        @Test
+        @DisplayName("an endless run is not won before the board is full")
+        void endlessStartsUnwon() {
+            Game game = new Game(20, 20, false, Game.ENDLESS, 20.0);
+
+            assertFalse(game.gameWon());
+        }
+
+        @Test
+        @DisplayName("endless is reported by name")
+        void endlessIsNamed() {
+            assertEquals("Endless", new Game(20, 20, false, Game.ENDLESS, 20.0).getModeName());
+            assertEquals("Normal", new Game(20, 20, false, 'N', 20.0).getModeName());
+        }
+    }
+
+    @Nested
     @DisplayName("difficulty")
     class Difficulty {
 

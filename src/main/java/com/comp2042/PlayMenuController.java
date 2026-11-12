@@ -23,12 +23,13 @@ public class PlayMenuController {
 
     private static final String SELECTED_STYLE = "selected";
 
-    private static final char[] DIFFICULTIES = {'E', 'N', 'H'};
-    private static final String[] NAMES = {"Easy", "Normal", "Hard"};
+    private static final char[] DIFFICULTIES = {'E', 'N', 'H', Game.ENDLESS};
+    private static final String[] NAMES = {"Easy", "Normal", "Hard", "Endless"};
     private static final String[] DESCRIPTIONS = {
             "Slower, the walls simply stop the snake instead of killing it, coins appear close to the snake, one automatic respawn.",
             "Steady pace with deadly walls.",
-            "Faster, deadly walls, and silver coins that litter the board with obstacles."
+            "Faster, deadly walls, and silver coins that litter the board with obstacles.",
+            "No score target: the classic game, won only by filling every cell of the board."
     };
     private static final int DEFAULT_INDEX = 1;
     /** Cells around the head that a coin may appear in. */
@@ -51,7 +52,7 @@ public class PlayMenuController {
             Button button = new Button(NAMES[i]);
             button.getStyleClass().add("optionButton");
             button.setUserData(index);
-            button.setPrefWidth(140.0);
+            button.setPrefWidth(105.0);
             button.setPrefHeight(40.0);
             button.setOnAction(event -> select(index));
             difficultyRow.getChildren().add(button);

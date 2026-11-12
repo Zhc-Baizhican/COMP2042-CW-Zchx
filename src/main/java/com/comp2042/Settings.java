@@ -19,6 +19,7 @@ public final class Settings {
 
     // Reserved for the theme and display iteration.
     private boolean darkTheme = false;
+    private boolean developerMode = false;
     private int windowSizeIndex = 0;
 
     private Settings() {
@@ -73,5 +74,17 @@ public final class Settings {
 
     public void setWindowSizeIndex(int windowSizeIndex) {
         this.windowSizeIndex = windowSizeIndex;
+    }
+
+    /**
+     * @return {@code true} when the developer tools, such as the progress reset,
+     *         are shown
+     */
+    public boolean isDeveloperMode() {
+        return developerMode;
+    }
+
+    public void setDeveloperMode(boolean developerMode) {
+        this.developerMode = developerMode;
     }
 }

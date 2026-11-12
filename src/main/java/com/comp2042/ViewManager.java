@@ -95,6 +95,16 @@ public class ViewManager {
         show("/resources/views/HackMenu.fxml", "Hacks");
     }
 
+    /** Shows the list of finished runs. */
+    public void showHistory() {
+        show("/resources/views/HistoryMenu.fxml", "History");
+    }
+
+    /** Shows the list of badges. */
+    public void showAchievements() {
+        show("/resources/views/AchievementsMenu.fxml", "Badges");
+    }
+
     /**
      * Shows a game scene in its own transparent window, so the area around the
      * board shows the desktop instead of an opaque background.

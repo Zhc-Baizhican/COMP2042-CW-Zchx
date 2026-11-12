@@ -1,6 +1,11 @@
 package com.comp2042;
 
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -8,6 +13,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -16,9 +23,14 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.util.List;
+
+import javax.imageio.ImageIO;
 
 public class GameView {
 
@@ -31,6 +43,8 @@ public class GameView {
     private Label statusTitle;
     private Label statusDetail;
     private VBox pauseButtons;
+    private VBox statusBox;
+    private VBox badgeCards;
     private Button resumeButton;
     private Button restartButton;
     private Button menuButton;
@@ -47,6 +61,22 @@ public class GameView {
     private boolean fullsize = false;
     /** Cells spanned by the painted board, regardless of how big the playfield is. */
     private static final int BOARD_CELLS = 20;
+
+    /** Run time shown in the board corner, formatted as mm:ss. */
+    private String timerText = "00:00";
+
+    /** Badges unlocked by the run that just ended, shown one card at a time. */
+    private List<Achievement> earnedBadges = List.of();
+
+    /** Timing of the end-of-run intro: panel first, then the text on top. */
+    private static final Duration STATUS_FADE = Duration.millis(220);
+    private static final Duration STATUS_TEXT_DELAY = Duration.millis(170);
+    private static final Duration STATUS_TEXT_IN = Duration.millis(260);
+    private static final Duration BADGE_IN = Duration.millis(200);
+
+    private Animation fadeIn;
+    private Animation textFadeIn;
+    private Animation textPopIn;
 
     /** Font used for the score painted on the canvas. */
     private static final Font SCORE_FONT = loadScoreFont();
@@ -79,8 +109,11 @@ public class GameView {
         statusDetail.setTextAlignment(TextAlignment.CENTER);
 
         pauseButtons = buildPauseButtons();
+        badgeCards = new VBox(5);
+        badgeCards.setAlignment(Pos.CENTER);
+        badgeCards.setVisible(false);
 
-        VBox statusBox = new VBox(statusTitle, statusDetail, pauseButtons);
+        statusBox = new VBox(statusTitle, statusDetail, badgeCards, pauseButtons);
         statusBox.setAlignment(Pos.CENTER);
         statusBox.setSpacing(10);
 
@@ -304,7 +337,7 @@ public class GameView {
         if (gc == null) {
             return;
         }
-        String text = "Score: " + game.getScorePoints() + " / " + game.getTargetScore();
+        String text = "Score: " + game.getScorePoints() + " / " + game.getWinTarget();
         Text measure = new Text(text);
         measure.setFont(SCORE_FONT);
         double padding = 10;
@@ -318,6 +351,39 @@ public class GameView {
         gc.setFill(Color.WHITE);
         gc.setFont(SCORE_FONT);
         gc.fillText(text, x + padding, y + height - 6);
+
+        drawTimer();
+    }
+
+    /**
+     * Draws the run time in the top-right corner of the board.
+     */
+    private void drawTimer() {
+        Text measure = new Text(timerText);
+        measure.setFont(SCORE_FONT);
+        double padding = 8;
+        double width = measure.getLayoutBounds().getWidth() + padding * 2;
+        double height = 20;
+        double x = boardOriginX() + boardPixels() - width - 6;
+        double y = boardOriginY() + 6;
+
+        gc.setFill(Color.rgb(0, 0, 0, 0.45));
+        gc.fillRoundRect(x, y, width, height, 10, 10);
+        gc.setFill(Color.WHITE);
+        gc.setFont(SCORE_FONT);
+        gc.fillText(timerText, x + padding, y + height - 6);
+    }
+
+    /**
+     * @param text the formatted run time, for example {@code 01:23}
+     * @return {@code true} when the text actually changed
+     */
+    public boolean setTimerText(String text) {
+        if (text == null || text.equals(timerText)) {
+            return false;
+        }
+        timerText = text;
+        return true;
     }
 
     /** Left edge of the whole playfield inside the canvas. */
@@ -442,7 +508,7 @@ public class GameView {
         } else if (dead) {
             showStatus("GAME OVER", "Score: " + game.getScorePoints());
         } else if (paused) {
-            showStatus("PAUSED", "Score: " + game.getScorePoints() + " / " + game.getTargetScore());
+            showStatus("PAUSED", "Score: " + game.getScorePoints() + " / " + game.getWinTarget());
         } else {
             hideStatus();
             showMenuButtons(false, false, false);
@@ -501,6 +567,43 @@ public class GameView {
         }
     }
 
+    /**
+     * Saves a picture of the painted board, for the run history.
+     *
+     * <p>Only the board is captured: in ghost-board mode the canvas is as large
+     * as the screen, and a screenshot of the whole desktop would be useless.</p>
+     *
+     * @param file where the PNG should be written
+     * @return {@code true} when the file was written
+     */
+    public boolean captureBoard(java.io.File file) {
+        if (gridCanvas == null) {
+            return false;
+        }
+        int size = (int) Math.round(boardPixels()) + 1;
+        if (size <= 1) {
+            return false;
+        }
+        SnapshotParameters params = new SnapshotParameters();
+        params.setViewport(new Rectangle2D(boardOriginX(), boardOriginY(), size, size));
+        WritableImage image = new WritableImage(size, size);
+        gridCanvas.snapshot(params, image);
+
+        BufferedImage buffered = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        PixelReader reader = image.getPixelReader();
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                buffered.setRGB(x, y, reader.getArgb(x, y));
+            }
+        }
+        try {
+            return ImageIO.write(buffered, "png", file);
+        } catch (Exception e) {
+            System.err.println("Could not save the run picture: " + e.getMessage());
+            return false;
+        }
+    }
+
     /** Key name for the on-screen hints, so they follow a rebind. */
     private String keyLabel(Action action) {
         return KeyBindings.get().labelFor(action);
@@ -509,10 +612,128 @@ public class GameView {
     private void showStatus(String title, String detail) {
         statusTitle.setText(title);
         statusDetail.setText(detail);
+
+        boolean wasHidden = !statusOverlay.isVisible();
         statusOverlay.setVisible(true);
+        if (wasHidden) {
+            playStatusIntro();
+            playBadgeIntro();
+        }
+    }
+
+    /**
+     * Drops the badges earned by this run into the panel one after another, each
+     * card arriving after the previous one.
+     */
+    private void playBadgeIntro() {
+        if (badgeCards == null) {
+            return;
+        }
+        badgeCards.getChildren().clear();
+        if (earnedBadges.isEmpty()) {
+            badgeCards.setVisible(false);
+            return;
+        }
+        badgeCards.setVisible(true);
+
+        long delayMs = 430;
+        for (Achievement badge : earnedBadges) {
+            Label card = new Label("★ " + badge.getTitle()
+                    + "      " + badge.getTier().getLabel());
+            card.getStyleClass().addAll("badgeCard", badge.getTier().getStyleClass());
+            card.setOpacity(0);
+            card.setScaleX(0.8);
+            card.setScaleY(0.8);
+            badgeCards.getChildren().add(card);
+
+            FadeTransition fade = new FadeTransition(BADGE_IN, card);
+            fade.setDelay(Duration.millis(delayMs));
+            fade.setFromValue(0);
+            fade.setToValue(1);
+
+            ScaleTransition pop = new ScaleTransition(BADGE_IN, card);
+            pop.setDelay(Duration.millis(delayMs));
+            pop.setFromX(0.8);
+            pop.setFromY(0.8);
+            pop.setToX(1);
+            pop.setToY(1);
+            pop.setInterpolator(Interpolator.EASE_OUT);
+
+            fade.play();
+            pop.play();
+            delayMs += 170;
+        }
+    }
+
+    /**
+     * Fades the grey panel in first, then pops the text and buttons on top of
+     * it, so an ended run lands with a little weight instead of appearing in a
+     * single frame.
+     */
+    private void playStatusIntro() {
+        if (statusBox == null) {
+            return;
+        }
+        stopStatusIntro();
+
+        statusOverlay.setOpacity(0);
+        statusBox.setOpacity(0);
+        statusBox.setScaleX(0.82);
+        statusBox.setScaleY(0.82);
+
+        FadeTransition panelIn = new FadeTransition(STATUS_FADE, statusOverlay);
+        panelIn.setFromValue(0);
+        panelIn.setToValue(1);
+        fadeIn = panelIn;
+
+        FadeTransition textIn = new FadeTransition(STATUS_TEXT_IN, statusBox);
+        textIn.setDelay(STATUS_TEXT_DELAY);
+        textIn.setFromValue(0);
+        textIn.setToValue(1);
+        textFadeIn = textIn;
+
+        ScaleTransition pop = new ScaleTransition(STATUS_TEXT_IN, statusBox);
+        pop.setDelay(STATUS_TEXT_DELAY);
+        pop.setFromX(0.82);
+        pop.setFromY(0.82);
+        pop.setToX(1);
+        pop.setToY(1);
+        pop.setInterpolator(Interpolator.EASE_OUT);
+        textPopIn = pop;
+
+        panelIn.play();
+        textIn.play();
+        pop.play();
+    }
+
+    /** Cancels a running intro so a new state starts from the beginning. */
+    private void stopStatusIntro() {
+        if (fadeIn != null) {
+            fadeIn.stop();
+        }
+        if (textFadeIn != null) {
+            textFadeIn.stop();
+        }
+        if (textPopIn != null) {
+            textPopIn.stop();
+        }
+        statusOverlay.setOpacity(1);
+        if (statusBox != null) {
+            statusBox.setOpacity(1);
+            statusBox.setScaleX(1);
+            statusBox.setScaleY(1);
+        }
+    }
+
+    /**
+     * @param badges the badges unlocked by the run that just ended
+     */
+    public void setEarnedBadges(List<Achievement> badges) {
+        this.earnedBadges = badges == null ? List.of() : List.copyOf(badges);
     }
 
     private void hideStatus() {
+        stopStatusIntro();
         statusOverlay.setVisible(false);
     }
 

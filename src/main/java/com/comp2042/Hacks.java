@@ -57,4 +57,19 @@ public final class Hacks {
     public int enabledCount() {
         return enabled.size();
     }
+
+    /**
+     * @return the enabled hacks as "Ghost board, Win", in declaration order;
+     *         an empty string when nothing is on
+     */
+    public String describeEnabled() {
+        StringBuilder text = new StringBuilder();
+        for (Hack hack : enabled) {
+            if (text.length() > 0) {
+                text.append(", ");
+            }
+            text.append(hack.getDisplayName());
+        }
+        return text.toString();
+    }
 }

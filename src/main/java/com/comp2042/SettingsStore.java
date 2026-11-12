@@ -28,6 +28,7 @@ public final class SettingsStore {
     private static final String KEY_SKIN = "snake.skin";
     private static final String KEY_THEME = "theme.dark";
     private static final String KEY_WINDOW_SIZE = "display.windowSizeIndex";
+    private static final String KEY_DEVELOPER = "developer.mode";
     private static final String KEY_PREFIX = "key.";
     private static final String HACK_PREFIX = "hack.";
 
@@ -67,6 +68,7 @@ public final class SettingsStore {
         settings.setSnakeSkin(SnakeSkin.fromName(properties.getProperty(KEY_SKIN)));
         settings.setDarkTheme(readBoolean(properties, KEY_THEME, settings.isDarkTheme()));
         settings.setWindowSizeIndex((int) readDouble(properties, KEY_WINDOW_SIZE, settings.getWindowSizeIndex()));
+        settings.setDeveloperMode(readBoolean(properties, KEY_DEVELOPER, settings.isDeveloperMode()));
         loadKeyBindings(properties);
         loadHacks(properties);
     }
@@ -83,6 +85,7 @@ public final class SettingsStore {
         properties.setProperty(KEY_SKIN, settings.getSnakeSkin().name());
         properties.setProperty(KEY_THEME, Boolean.toString(settings.isDarkTheme()));
         properties.setProperty(KEY_WINDOW_SIZE, Integer.toString(settings.getWindowSizeIndex()));
+        properties.setProperty(KEY_DEVELOPER, Boolean.toString(settings.isDeveloperMode()));
         saveKeyBindings(properties);
         saveHacks(properties);
 

@@ -71,12 +71,19 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Settings screen: sound on/off, volume slider, five snake colour presets, a day / night theme, three window sizes and rebindable keys, saved to `~/.comp2042/settings.properties` and restored on the next launch
 - One fixed square window for every screen: the size setting (480 / 600 / 760 px) applies to the whole application, and the board scales its cell size to fit, so navigating never resizes the window
 - Night theme recolours the menu, the board and the obstacles, so obstacles stay visible
-- A run is won by reaching the difficulty's target score: Easy 100, Normal 150, Hard 200. The HUD shows progress as `Score: 45 / 150`
+- A run is won by reaching the difficulty's target score: Easy 100, Normal 200, Hard 250. The HUD shows progress as `Score: 45 / 200`
+- Endless is the fourth choice on that page: no score target, the classic game that is won only by filling the whole board
+- History screen listing finished runs newest first, each with a picture of the final board, the mode, the score, the run time, the snake length, and the hacks that were on
+- A run clock that starts at 0:00 when the start prompt appears, pauses with the game, and freezes when the run ends
+- Badges: 15 achievements checked against every finished run, unlocked badges are marked on a dedicated screen and reported under the result of the run that earned them
+- Four rarity tiers colour the badges from muted grey up to a glowing gold card; earned badges drop into the end-of-run panel one after another
+- One badge is secret: its name and condition stay masked as `???` until it is earned, and locked secrets are listed after the visible ones
+- Developer mode, off by default and toggled in the settings: it reveals the badge reset button, so the unlock flow can be retested without editing files
 - Every control is rebindable: click a key in the settings screen and press the new one. A key can only drive one action, and clashes are reported instead of silently overwriting
 - On-screen hints (main menu, pause, game over) are generated from the current bindings, so they follow a rebind
-- Hack mode: a list of rule-breaking entries reachable from the difficulty page, freely combinable and saved between runs
+- Hack mode: a list of rule-breaking entries reachable from the difficulty page, freely combinable, saved between runs, with a preset row that clears the previous selection before applying
 - *Ghost board* lets the snake leave the board and drops coins in the transparent area around it; *Win* ends the run as a victory on the first key press
-- Unit tests (JUnit 5, `src/test/java`) — 34 tests covering `Game`, `Direction`, `KeyBindings` and `Cheats`, run with `.\mvnw.cmd test`
+- Unit tests (JUnit 5, `src/test/java`) — 61 tests covering `Game`, `Direction`, `KeyBindings`, `Hacks`, the hack presets, the run history and the achievements, run with `.\mvnw.cmd test`
 
 ---
 
@@ -105,9 +112,18 @@ All under `src/main/java/com/comp2042/`.
 | `AudioService` | Loads the pickup sound once and plays it according to the sound settings |
 | `SettingsController` | Controller for the settings screen |
 | `PlayMenuController` | Controller for the difficulty page, which also builds and starts the game |
-| `Cheat` | One rule-breaking entry, with its name and description |
-| `Cheats` | Which entries are switched on; persisted with the other settings |
-| `CheatMenuController` | Controller for the hack list |
+| `Hack` | One rule-breaking entry, with its name and description |
+| `Hacks` | Which entries are switched on; persisted with the other settings |
+| `HackPreset` | Ready-made combinations that clear the previous selection before applying |
+| `HackMenuController` | Controller for the hack list and its preset row |
+| `RunRecord` | One finished run: time, mode, score, length, duration, hacks and picture |
+| `RunHistory` | Persists the records to `~/.comp2042/history/history.tsv` and caps the list |
+| `HistoryController` | Controller for the history screen |
+| `RunSummary` | The facts about a finished run that the achievement rules read |
+| `Achievement` | One badge, with its title, description, rarity tier and unlock rule |
+| `AchievementTier` | Common, rare, epic and legendary, each with the style class that colours it |
+| `Achievements` | Which badges are unlocked; persisted to `~/.comp2042/achievements.txt` |
+| `AchievementController` | Controller for the badge screen |
 | `ThemeManager` | Applies the day / night theme by toggling a style class on a scene root |
 | `Direction` | The four directions the snake travels, replacing raw character and key codes |
 | `Action` | Every keyboard action with its display name, default key and direction |
@@ -157,4 +173,6 @@ All under `src/main/java/com/comp2042/`.
 | `v0.0-baseline` | Original code as provided |
 | `v0.2-ui` | Main menu rebuilt with a logo, difficulty selector and Quit button |
 | `v0.3-hud` | In-game HUD pill, pause overlay and game over panel |
-| `v0.4-hacks` | Hack menu with the ghost board and instant-win entries, start prompt, pause menu, score drawn on the board |
+| `v0.4-hacks` | Hack menu with the ghost board, instant win and preset row, start prompt, pause menu, score drawn on the board |
+| `v0.5-endless` | Endless mode that is won by filling the board, a run clock, and a history screen with a picture of every finished run |
+| `v0.6-badges` | 15 achievements across four rarity tiers, evaluated at the end of every run, with a badge screen, pop-up badge cards, a masked secret badge and a developer mode that reveals the reset |

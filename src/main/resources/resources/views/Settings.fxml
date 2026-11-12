@@ -50,6 +50,13 @@
                         </HBox>
                         <Label styleClass="sectionTitle" text="WINDOW SIZE" />
                         <HBox fx:id="sizeRow" alignment="CENTER" spacing="10.0" />
+                        <Label styleClass="sectionTitle" text="DEVELOPER" />
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                            <children>
+                                <Label minWidth="92.0" styleClass="settingLabel" text="Dev mode" />
+                                <CheckBox fx:id="devModeCheck" />
+                            </children>
+                        </HBox>
                         <Label styleClass="sectionTitle" text="CONTROLS  —  click a key to change it" />
                         <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="170.0" styleClass="keyScroll" vbarPolicy="AS_NEEDED">
                             <content>

@@ -56,4 +56,36 @@ class HacksTest {
 
         assertEquals(Hack.values().length, Hacks.get().enabledCount());
     }
+
+    @Test
+    @DisplayName("applying a preset clears whatever was ticked before")
+    void presetClearsOldSelection() {
+        Hacks.get().setEnabled(Hack.WIN, true);
+
+        HackPreset.GHOST_BOARD.applyTo(Hacks.get());
+
+        assertTrue(Hacks.get().isEnabled(Hack.OFF_BOARD));
+        assertFalse(Hacks.get().isEnabled(Hack.WIN), "the previous tick should be gone");
+        assertEquals(1, Hacks.get().enabledCount());
+    }
+
+    @Test
+    @DisplayName("the clear preset switches everything off")
+    void clearPresetEmptiesEverything() {
+        for (Hack hack : Hack.values()) {
+            Hacks.get().setEnabled(hack, true);
+        }
+
+        HackPreset.CLEAR.applyTo(Hacks.get());
+
+        assertEquals(0, Hacks.get().enabledCount());
+    }
+
+    @Test
+    @DisplayName("the everything preset switches every hack on")
+    void everythingPresetEnablesAll() {
+        HackPreset.EVERYTHING.applyTo(Hacks.get());
+
+        assertEquals(Hack.values().length, Hacks.get().enabledCount());
+    }
 }

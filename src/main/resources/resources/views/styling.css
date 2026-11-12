@@ -159,6 +159,176 @@
     -fx-background-color: #ffffff;
 }
 
+.historyPane {
+    -fx-background-color: #ffffff;
+}
+
+.historyContent {
+    -fx-padding: 16 26 16 26;
+}
+
+.historyRow {
+    -fx-background-color: #eef1f5;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+.historyHeadline {
+    -fx-font-size: 13;
+    -fx-text-fill: #1f2430;
+}
+
+.historyLine {
+    -fx-font-size: 10;
+    -fx-text-fill: #4a5160;
+}
+
+.achievementPane {
+    -fx-background-color: #ffffff;
+}
+
+.achievementContent {
+    -fx-padding: 16 26 16 26;
+}
+
+.badgeRow {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 0 0 0 4;
+    -fx-padding: 6 10 6 10;
+}
+
+/* Locked rows stay muted whatever the tier, so the colours only shine once earned. */
+.badgeRow.locked {
+    -fx-background-color: #f2f4f7;
+    -fx-border-color: #c7ced8;
+}
+
+.tierCommon.badgeRow.unlocked {
+    -fx-background-color: #eef1f5;
+    -fx-border-color: #97a1b0;
+}
+
+.tierRare.badgeRow.unlocked {
+    -fx-background-color: #e6f0ff;
+    -fx-border-color: #3b82f6;
+}
+
+.tierEpic.badgeRow.unlocked {
+    -fx-background-color: #f3e8ff;
+    -fx-border-color: #a855f7;
+}
+
+.tierLegendary.badgeRow.unlocked {
+    -fx-background-color: linear-gradient(to right, #fff6de, #ffe6a8);
+    -fx-border-color: #f0a500;
+    -fx-effect: dropshadow(gaussian, rgba(240, 165, 0, 0.35), 10, 0.2, 0, 0);
+}
+
+.badgeStar {
+    -fx-font-size: 16;
+}
+
+.badgeStar.starOff {
+    -fx-text-fill: #b3bac5;
+}
+
+.badgeStar.starOn.tierCommon {
+    -fx-text-fill: #6b7280;
+}
+
+.badgeStar.starOn.tierRare {
+    -fx-text-fill: #2563eb;
+}
+
+.badgeStar.starOn.tierEpic {
+    -fx-text-fill: #9333ea;
+}
+
+.badgeStar.starOn.tierLegendary {
+    -fx-text-fill: #e08a00;
+}
+
+.badgeTitle {
+    -fx-font-size: 12;
+    -fx-text-fill: #1f2430;
+}
+
+.badgeTitleLocked {
+    -fx-font-size: 12;
+    -fx-text-fill: #6b7280;
+}
+
+.badgeDescription {
+    -fx-font-size: 10;
+    -fx-text-fill: #4a5160;
+}
+
+/* ---------- badge cards shown when a run ends ---------- */
+
+.badgeCard {
+    -fx-font-size: 12;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 5 14 5 14;
+    -fx-background-radius: 7;
+}
+
+.badgeCard.tierCommon {
+    -fx-background-color: #6b7280;
+}
+
+.badgeCard.tierRare {
+    -fx-background-color: #2563eb;
+}
+
+.badgeCard.tierEpic {
+    -fx-background-color: #9333ea;
+}
+
+.badgeCard.tierLegendary {
+    -fx-background-color: linear-gradient(to right, #f59e0b, #fbbf24);
+    -fx-text-fill: #3a2a00;
+    -fx-effect: dropshadow(gaussian, rgba(245, 158, 11, 0.85), 16, 0.45, 0, 0);
+}
+
+.dark .badgeRow.locked {
+    -fx-background-color: #222833;
+    -fx-border-color: #3a4150;
+}
+
+.dark .tierCommon.badgeRow.unlocked {
+    -fx-background-color: #262c36;
+    -fx-border-color: #8a94a6;
+}
+
+.dark .tierRare.badgeRow.unlocked {
+    -fx-background-color: #1c2740;
+    -fx-border-color: #3b82f6;
+}
+
+.dark .tierEpic.badgeRow.unlocked {
+    -fx-background-color: #2a1d3d;
+    -fx-border-color: #a855f7;
+}
+
+.dark .tierLegendary.badgeRow.unlocked {
+    -fx-background-color: linear-gradient(to right, #3a2f14, #4a3a12);
+    -fx-border-color: #f0a500;
+    -fx-effect: dropshadow(gaussian, rgba(240, 165, 0, 0.5), 12, 0.3, 0, 0);
+}
+
+.dark .badgeTitle {
+    -fx-text-fill: #e6ebf2;
+}
+
+.dark .badgeTitleLocked {
+    -fx-text-fill: #98a2b3;
+}
+
+.dark .badgeDescription {
+    -fx-text-fill: #aab3c2;
+}
+
 .hackContent {
     -fx-padding: 16 26 16 26;
 }
@@ -171,6 +341,24 @@
 
 .dark .hackCheck {
     -fx-text-fill: #c9ced6;
+}
+
+.presetButton {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 11;
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #4a5160;
+    -fx-background-radius: 5;
+    -fx-padding: 4 12 4 12;
+    -fx-cursor: hand;
+}
+
+.presetButton:hover {
+    -fx-background-color: #5a6274;
+}
+
+.presetButton:pressed {
+    -fx-background-color: #3a414e;
 }
 
 .difficultyDescription {
@@ -294,8 +482,22 @@
 .dark#backgroundPane,
 .dark.playPane,
 .dark.settingsPane,
-.dark.hackPane {
+.dark.hackPane,
+.dark.historyPane,
+.dark.achievementPane {
     -fx-background-color: #171a21;
+}
+
+.dark .historyRow {
+    -fx-background-color: #222833;
+}
+
+.dark .historyHeadline {
+    -fx-text-fill: #e6ebf2;
+}
+
+.dark .historyLine {
+    -fx-text-fill: #aab3c2;
 }
 
 .dark #title,

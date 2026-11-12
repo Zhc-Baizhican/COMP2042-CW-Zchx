@@ -49,6 +49,9 @@ public class SettingsController {
     private CheckBox darkThemeCheck;
 
     @FXML
+    private CheckBox devModeCheck;
+
+    @FXML
     private HBox sizeRow;
 
     @FXML
@@ -92,6 +95,12 @@ public class SettingsController {
             settings.setDarkTheme(isSelected);
             SettingsStore.save(settings);
             applyThemeEverywhere();
+        });
+
+        devModeCheck.setSelected(settings.isDeveloperMode());
+        devModeCheck.selectedProperty().addListener((observable, wasSelected, isSelected) -> {
+            settings.setDeveloperMode(isSelected);
+            SettingsStore.save(settings);
         });
 
         updateVolumeValue();
