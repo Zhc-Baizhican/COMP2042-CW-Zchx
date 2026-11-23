@@ -65,7 +65,7 @@ public class GameView {
     private double fullScale = 1;
     private boolean fullsize = false;
     /** Cells spanned by the painted board, regardless of how big the playfield is. */
-    private static final int BOARD_CELLS = 20;
+    private static final int BOARD_CELLS = BoardGeometry.CELLS;
 
     /** Run time shown in the board corner, formatted as mm:ss. */
     private String timerText = "00:00";
@@ -98,13 +98,13 @@ public class GameView {
         this.turnArray = new int[game.getWidth()][game.getHeight()];
     }
 
-    public void makeScene(Scene scene, Snake snek, Coin coin) {
+    public void makeScene(Scene scene, Snake snek, Coin coin, Obstacle obstacle) {
         Scene gameScene = scene;
         gridCanvas = new Canvas(gameScene.getWidth(), gameScene.getHeight());
         initX = scene.getWidth();
         initY = scene.getHeight();
         gc = gridCanvas.getGraphicsContext2D();
-        drawGrid(coin, snek, gc);
+        drawGrid(coin, snek, obstacle, gc);
 
         addStylesheet(scene);
 
@@ -334,10 +334,10 @@ public class GameView {
         }
 
         updateOverlayLayout();
-        drawGrid(coin, snek, obstacle, gc, false, 0);
+        drawGrid(coin, snek, obstacle, gc);
     }
 
-    public void drawGrid(Coin coin, Snake snek, Obstacle obstacle, GraphicsContext gc, boolean a, int b) {
+    public void drawGrid(Coin coin, Snake snek, Obstacle obstacle, GraphicsContext gc) {
         drawBoardBackground();
 
         gc.save();
@@ -393,25 +393,6 @@ public class GameView {
         gc.strokeOval(centreX - radius, centreY - radius, radius * 2, radius * 2);
     }
 
-    private void drawGrid(Coin coin, Snake snek, GraphicsContext gc) {
-        drawBoardBackground();
-
-        gc.save();
-        gc.translate(gridOriginX(), gridOriginY());
-
-        gc.drawImage(coin.getImage(), (coin.getPos().x * game.getMultiplier()) * fullScale, (coin.getPos().y * game.getMultiplier()) * fullScale, game.getMultiplier() * fullScale - 3 * fullScale, game.getMultiplier() * fullScale - 3 * fullScale);
-
-        int bodyIndex = 0;
-        for (Point point : snek.getBody()) {
-            drawBody(snek, point, bodyIndex);
-            bodyIndex++;
-        }
-
-        drawHead(snek);
-
-        gc.restore();
-    }
-
     /**
      * Clears the canvas to transparent and paints the board in the middle. The
      * surrounding margin is left transparent on purpose: the game window is a
@@ -429,7 +410,7 @@ public class GameView {
      * this is capped at the original cell count.
      */
     private double boardPixels() {
-        return Math.min(game.getWidth(), BOARD_CELLS) * game.getMultiplier() * fullScale;
+        return BoardGeometry.columns(game.getWidth()) * game.getMultiplier() * fullScale;
     }
 
     /** Left edge of the painted board inside the canvas. */
@@ -444,7 +425,7 @@ public class GameView {
 
     /** Number of cells the painted board spans. */
     private double boardCells() {
-        return Math.min(Math.min(game.getWidth(), game.getHeight()), BOARD_CELLS);
+        return Math.min(BoardGeometry.columns(game.getWidth()), BoardGeometry.rows(game.getHeight()));
     }
 
     /**

@@ -85,7 +85,7 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Hack mode: a list of rule-breaking entries reachable from the difficulty page, freely combinable, saved between runs, with a preset row that clears the previous selection before applying
 - Eight hacks: ghost board, instant win, Midas (gold coins only), no growth, mirror keys, turbo, slow motion and blind (the board goes dark except the head and the coin)
 - *Ghost board* lets the snake leave the board and drops coins in the transparent area around it; *Win* ends the run as a victory on the first key press
-- Unit tests (JUnit 5, `src/test/java`) — 64 tests covering `Game`, `Direction`, `KeyBindings`, `Hacks`, the hack presets, the run history and the achievements, run with `.\mvnw.cmd test`
+- Unit tests (JUnit 5, `src/test/java`) — 68 tests covering `Game`, `Direction`, `KeyBindings`, `Hacks`, the hack presets, the run history, the achievements and the board geometry, run with `.\mvnw.cmd test`
 
 ---
 
@@ -140,6 +140,7 @@ All under `src/main/java/com/comp2042/`.
 | `Direction` | The four directions the snake travels, replacing raw character and key codes |
 | `Action` | Every keyboard action with its display name, default key and direction |
 | `KeyBindings` | The current key for each action, with reverse lookup for clash detection |
+| `BoardGeometry` | Where the twenty-cell board sits inside a playfield that may be a whole screen; the one place that knows the board rectangle |
 
 ---
 
@@ -228,3 +229,4 @@ The codebase uses a small number of patterns deliberately; they are listed here 
 | `v0.5-endless` | Endless mode that is won by filling the board, a run clock, and a history screen with a picture of every finished run |
 | `v0.6-badges` | 15 achievements across four rarity tiers, evaluated at the end of every run, with a badge screen, pop-up badge cards, a masked secret badge and a developer mode that reveals the reset |
 | `v0.7-feel` | Six more hacks, two extra presets, and game feel: countdown, pickup ring, screen shake, death and badge sounds, best scores on the menu |
+| `v0.8-cleanup` | Dead `drawGrid` parameters, the duplicated renderer and the three copies of the board constant collapsed into `BoardGeometry` |

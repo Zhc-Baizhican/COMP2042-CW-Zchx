@@ -148,7 +148,7 @@ public class PlayMenuController {
         // over the whole scene.
         gameScene.setOnKeyPressed(controller::handle);
 
-        gameView.makeScene(gameScene, snek, coin);
+        gameView.makeScene(gameScene, snek, coin, obstacle);
         gamePane.getChildren().addAll(gameView.gridCanvas, gameView.statusOverlay, gameView.startOverlay);
         return gameScene;
     }

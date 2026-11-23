@@ -10,9 +10,6 @@ import java.util.Random;
 import java.util.Set;
 
 public class Coin {
-    /** Cells spanned by the painted board, regardless of the playfield size. */
-    private static final int BOARD_CELLS = 20;
-
     /** Where a coin is allowed to appear. */
     public enum Area {
         /** Anywhere in the playfield. */
@@ -91,10 +88,6 @@ public class Coin {
         blocked.addAll(snek.getBody());
         blocked.add(snek.getHead());
 
-        int boardWidth = Math.min(width, BOARD_CELLS);
-        int boardLeft = (width - boardWidth) / 2;
-        int boardTop = (height - Math.min(height, BOARD_CELLS)) / 2;
-
         boolean wantBoard = area == Area.BOARD;
         boolean wantOutside = area == Area.OUTSIDE;
 
@@ -107,8 +100,7 @@ public class Coin {
                 if (blocked.contains(candidate)) {
                     continue;
                 }
-                boolean onBoard = cx >= boardLeft && cx < boardLeft + boardWidth
-                        && cy >= boardTop && cy < boardTop + boardWidth;
+                boolean onBoard = BoardGeometry.onBoard(cx, cy, width, height);
                 if (wantBoard && !onBoard) {
                     continue;
                 }

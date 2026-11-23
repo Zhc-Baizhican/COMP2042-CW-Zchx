@@ -20,9 +20,6 @@ import java.io.IOException;
  */
 public class ViewManager {
 
-    /** Space kept around the game board inside the window. */
-    public static final int BOARD_PADDING = 20;
-
     /**
      * Square window sizes for the small, medium and large options. The settings
      * screen scrolls, so these can stay comfortably small.

@@ -18,7 +18,6 @@ public class GameController {
 
     private static final int RESPAWN_PENALTY = 30;
     private static final int EASY_COIN_RADIUS = 6;
-    private static final int BOARD_CELLS = 20;
 
     private Snake snek;
     private Coin coin;
@@ -64,7 +63,7 @@ public class GameController {
             return;
         }
         if (gameView.setTimerText(formatTime(elapsedSeconds()))) {
-            gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+            gameView.drawGrid(coin, snek, obstacle, gameView.gc);
         }
     }
 
@@ -167,7 +166,7 @@ public class GameController {
                 animation.stop();
                 finishClock();
                 recordRun(true);
-                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                gameView.drawGrid(coin, snek, obstacle, gameView.gc);
                 gameView.updateStatus(snek, paused);
                 return;
             }
@@ -176,7 +175,7 @@ public class GameController {
 
         keyPressed = false;
 
-        gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(coin, snek, obstacle, gameView.gc);
         gameView.updateStatus(snek, paused);
     }
 
@@ -200,7 +199,7 @@ public class GameController {
                 animation.stop();
                 finishClock();
                 recordRun(true);
-                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                gameView.drawGrid(coin, snek, obstacle, gameView.gc);
                 gameView.updateStatus(snek, paused);
                 return;
             }
@@ -347,7 +346,7 @@ public class GameController {
         paused = false;
 
         gameView.updateStatus(snek, paused);
-        gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(coin, snek, obstacle, gameView.gc);
     }
 
     /**
@@ -454,15 +453,8 @@ public class GameController {
      * @return {@code true} once the snake's head is outside the painted board
      */
     private boolean isHeadOffBoard() {
-        int columns = game.getWidth();
-        int rows = game.getHeight();
-        int boardColumns = Math.min(columns, BOARD_CELLS);
-        int boardRows = Math.min(rows, BOARD_CELLS);
-        int left = (columns - boardColumns) / 2;
-        int top = (rows - boardRows) / 2;
         java.awt.Point head = snek.getHead();
-        return head.x < left || head.x >= left + boardColumns
-                || head.y < top || head.y >= top + boardRows;
+        return !BoardGeometry.onBoard(head.x, head.y, game.getWidth(), game.getHeight());
     }
 
     /**
