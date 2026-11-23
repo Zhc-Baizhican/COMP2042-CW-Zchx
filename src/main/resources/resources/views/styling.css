@@ -93,6 +93,12 @@
     -fx-padding: 6 0 0 0;
 }
 
+#bestLabel {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 10;
+    -fx-text-fill: #6b7280;
+}
+
 /* ---------- in-game labels (used by GameView) ---------- */
 
 .label {
@@ -503,6 +509,10 @@
 .dark #title,
 .dark #settingsTitle {
     -fx-text-fill: #eef1f5;
+}
+
+.dark #bestLabel {
+    -fx-text-fill: #9aa5b4;
 }
 
 .dark #difficultyLabel,

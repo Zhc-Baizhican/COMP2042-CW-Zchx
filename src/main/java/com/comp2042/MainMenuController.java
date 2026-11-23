@@ -4,6 +4,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
+import java.util.List;
+
 /**
  * Controller for the main menu.
  *
@@ -19,11 +21,46 @@ public class MainMenuController {
     @FXML
     private Label hint;
 
+    @FXML
+    private Label bestLabel;
+
     private ViewManager viewManager = Main.getViewManager();
 
     @FXML
     private void initialize() {
         refreshHints();
+        refreshBestScores();
+    }
+
+    /**
+     * Shows the best score per mode, read straight from the run history so no
+     * extra file is needed for it.
+     */
+    private void refreshBestScores() {
+        if (bestLabel == null) {
+            return;
+        }
+        List<RunRecord> records = RunHistory.get().getRecords();
+        if (records.isEmpty()) {
+            bestLabel.setText("No runs yet");
+            return;
+        }
+
+        StringBuilder text = new StringBuilder("Best");
+        boolean any = false;
+        for (String mode : new String[]{"Easy", "Normal", "Hard", "Endless"}) {
+            int top = -1;
+            for (RunRecord record : records) {
+                if (record.getMode().equalsIgnoreCase(mode)) {
+                    top = Math.max(top, record.getScore());
+                }
+            }
+            if (top > 0) {
+                text.append("      ").append(mode).append(' ').append(top);
+                any = true;
+            }
+        }
+        bestLabel.setText(any ? text.toString() : "No runs yet");
     }
 
     /** Opens the difficulty page, where the game is actually started. */

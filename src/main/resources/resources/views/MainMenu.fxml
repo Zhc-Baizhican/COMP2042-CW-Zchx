@@ -22,6 +22,7 @@
                     </image>
                 </ImageView>
                 <Label id="title" text="SNAKE GAME" />
+                <Label fx:id="bestLabel" id="bestLabel" text="" />
                 <Button fx:id="btn_start" onAction="#handleStart" prefHeight="49.0" prefWidth="190.0" styleClass="primaryButton" text="Start" />
                 <HBox alignment="CENTER" spacing="8.0">
                     <children>
