@@ -75,6 +75,7 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Endless is the fourth choice on that page: no score target, the classic game that is won only by filling the whole board
 - History screen listing finished runs newest first, each with a picture of the final board, the mode, the score, the run time, the snake length, and the hacks that were on
 - A run clock that starts at 0:00 when the start prompt appears, pauses with the game, and freezes when the run ends
+- Game feel: a 3-2-1 countdown after the start prompt, a coin pickup ring, a screen shake when a run ends, a low thud and a bright chime for death and badges, and a best-score line per mode on the main menu
 - Badges: 15 achievements checked against every finished run, unlocked badges are marked on a dedicated screen and reported under the result of the run that earned them
 - Four rarity tiers colour the badges from muted grey up to a glowing gold card; earned badges drop into the end-of-run panel one after another
 - One badge is secret: its name and condition stay masked as `???` until it is earned, and locked secrets are listed after the visible ones
@@ -82,8 +83,9 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Every control is rebindable: click a key in the settings screen and press the new one. A key can only drive one action, and clashes are reported instead of silently overwriting
 - On-screen hints (main menu, pause, game over) are generated from the current bindings, so they follow a rebind
 - Hack mode: a list of rule-breaking entries reachable from the difficulty page, freely combinable, saved between runs, with a preset row that clears the previous selection before applying
+- Eight hacks: ghost board, instant win, Midas (gold coins only), no growth, mirror keys, turbo, slow motion and blind (the board goes dark except the head and the coin)
 - *Ghost board* lets the snake leave the board and drops coins in the transparent area around it; *Win* ends the run as a victory on the first key press
-- Unit tests (JUnit 5, `src/test/java`) — 61 tests covering `Game`, `Direction`, `KeyBindings`, `Hacks`, the hack presets, the run history and the achievements, run with `.\mvnw.cmd test`
+- Unit tests (JUnit 5, `src/test/java`) — 64 tests covering `Game`, `Direction`, `KeyBindings`, `Hacks`, the hack presets, the run history and the achievements, run with `.\mvnw.cmd test`
 
 ---
 
@@ -176,3 +178,4 @@ All under `src/main/java/com/comp2042/`.
 | `v0.4-hacks` | Hack menu with the ghost board, instant win and preset row, start prompt, pause menu, score drawn on the board |
 | `v0.5-endless` | Endless mode that is won by filling the board, a run clock, and a history screen with a picture of every finished run |
 | `v0.6-badges` | 15 achievements across four rarity tiers, evaluated at the end of every run, with a badge screen, pop-up badge cards, a masked secret badge and a developer mode that reveals the reset |
+| `v0.7-feel` | Six more hacks, two extra presets, and game feel: countdown, pickup ring, screen shake, death and badge sounds, best scores on the menu |
