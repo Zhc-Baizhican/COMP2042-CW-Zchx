@@ -61,9 +61,9 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 - Arrow-key controlled snake with self-collision and wall-collision detection
 - Five coin types with distinct effects: normal, gold (+15 points), silver (adds obstacles, hard mode only), blue (fearless of borders), rainbow (speed-up)
 - Obstacles that the snake must avoid
-- Score HUD pill in the top bar, updated on every coin
+- Score and run time painted on the board itself, so they stay pinned to the playfield whatever the window size
 - Coin sound effect played on pickup
-- Pause (`P`) with a PAUSED overlay, restart (`TAB`), fullscreen toggle (`+` / `-`), back to main menu (`ESC`)
+- Pause menu on `Escape` with Resume / Restart / Main menu, restart (`TAB`), fullscreen toggle (`+` / `-`)
 - Game over and level complete panels showing the final score and the restart keys
 - Main menu with logo, Start, Settings and Quit; Start opens a separate difficulty page instead of hiding the choice behind one cycling button
 - Three difficulties on that page, each with a one-line description: Easy is slower, the walls stop the snake instead of killing it, coins spawn near the snake and one automatic respawn is granted (-30 points); Normal moves faster with deadly walls; Hard is the fastest and is the only mode that spawns the obstacle-adding silver coin
@@ -91,13 +91,23 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 
 ## 4. Implemented but Not Working Properly
 
-<!-- TODO -->
+- **The transparent game window depends on the platform.** The game window is created with `StageStyle.TRANSPARENT`, which is what lets the desktop show through around the board and makes the ghost-board hack look like the board is floating. On a machine where per-pixel transparency is unavailable — a remote desktop session, a virtual machine, or a driver that does not offer desktop composition — the JavaFX toolkit silently falls back to an ordinary decorated window. The game still plays, but the area around the board becomes an opaque block and the window grows a title bar. The application cannot detect or force composition, so there is no fallback to switch to.
+- **The ghost board only covers the primary screen.** The playfield is sized from `Screen.getPrimary().getVisualBounds()`, so on a multi-monitor setup the extra cells stop at the edge of the main display.
+- **The run clock includes the 3-2-1 countdown.** The clock starts when the start prompt appears, as specified, so it also counts the 1.5 s countdown before the snake is released. A recorded run therefore cannot be much shorter than two seconds.
+- **Older history entries are skipped after the format change.** `history.tsv` gained a duration column, so rows written by an earlier build have seven fields instead of eight and are dropped on load rather than migrated. The screen simply starts from an empty list.
+- **The three sound effects share one clip.** The pickup blip, the death thud and the badge chime are the same `coinSound.wav` played at three playback rates. It works and needs no extra assets, but it is a compromise: a recorded effect per event would sound better.
+- **Blind hides the obstacles too.** With the blind hack on, the silver coin in hard mode still litters the board with obstacles, and those obstacles are invisible under the darkness. That is a genuine handicap rather than a bug, but it can feel unfair.
+- **Badges are only evaluated when a run ends.** Leaving a run through the pause menu records nothing, so a good run abandoned half way is neither scored nor eligible for a badge.
 
 ---
 
 ## 5. Features Not Implemented
 
-<!-- TODO -->
+- **World-shaping hacks** — shrinking board, rotating board, portals, a coin magnet and an autopilot. Each one moves coordinates or spawns entities while the run is in progress, so it touches the drawing, the collision checks and the coin placement at the same time. With roughly five working days left before the documentation deadline I chose to keep eight hacks finished and tested instead of adding two half-working ones.
+- **Named leaderboards.** The best score per mode is shown on the main menu, but there is no name entry, no per-achievement ranking and no shared table, because a meaningful ranking needs a server or a synchronised file that the coursework does not provide.
+- **Replaying a finished run.** The history keeps a picture of the final board; replaying the whole run would mean recording every direction change and re-running the simulation, which is a feature on its own.
+- **Gamepad or touch input.** Every control is rebindable to a key, but the input layer only understands `KeyEvent`; supporting a controller or touch would need a second input path.
+- **Localisation.** All user-facing text is English and lives in the FXML files and the controllers, so adding a language would mean externalising every string.
 
 ---
 
@@ -159,12 +169,51 @@ All under `src/main/java/com/comp2042/`.
 | `GameView.java` | `turnDir` takes the previous and current `Direction` instead of reading two static `KeyCode` fields | The corner sprite depended on which physical key was pressed, which breaks as soon as a key is rebound |
 | `SettingsStore.java` | Loads and saves one `key.<ACTION>` entry per action | Key bindings have to survive a restart like the other settings |
 | `SettingsController.java` / `Settings.fxml` | Added the controls list: one row per action, click to capture a new key, with clash detection and an Esc cancel | The UI for rebinding, and the reason the window grew to 640 px |
+| `Action.java` | `PAUSE` (on `P`) removed; `BACK_TO_MENU` replaced by `PAUSE_MENU` on `Escape` | Pause had to open a menu with Resume / Restart / Main menu, so one key replaced the old pair of "pause" and "back" |
+| `Direction.java` | Added `mirrored()` | The mirror-keys hack needs one place that knows left and right are each other's opposite |
+| `PlayMenuController.java` | Fourth difficulty (Endless); a Hacks button; scene sizing for the ghost board; the initial coin's region; Escape back to the menu | The page became the entry point for both the modes and the hacks |
+| `GameController.java` | Pause-menu actions wired to the view; a run clock and a first-key idle measurement; run recording (picture, history, badges); guards so a finished run stops; coin spawn regions; a speed multiplier for the turbo and slow-motion hacks; the 3-2-1 countdown | The end of a run used to leave the timeline running, and the hacks needed a single place to scale the animation rate |
+| `GameView.java` | The score and the run time are painted on the canvas; the status overlay fades in and then pops; badge cards animate in one by one; shake, pickup ring and countdown; board capture for the history; bounds-checked turn lookups | A `Label` positioned by the layout drifted away from the board once the playfield and the window had different sizes, and the turn array threw as soon as the snake could leave the grid |
+| `Snake.java` | In easy mode a wall stops the snake instead of wrapping it, with a `wallBlocked` flag for the arrows; the ghost-board hack removes the border rule; the no-growth hack keeps the tail moving on a pickup | Wrapping made easy mode feel like a different game, and the hacks needed the rules to live where they are checked |
+| `Coin.java` | An `Area` enum (`ANY` / `BOARD` / `OUTSIDE`) filters the free cells a coin may occupy | The ghost board alternates between coins on the board and coins in the transparent area |
+| `GoldCoin` / `SilverCoin` / `BlueCoin` / `RainbowCoin` | Constructors take the spawn area | They have to pass the region through to `Coin` |
+| `Settings.java` / `SettingsStore.java` | A `developerMode` flag, saved as `developer.mode` | The badge reset is a testing tool and should not be on screen by default |
+| `Settings.fxml` / `SettingsController.java` | A "Dev mode" toggle | The switch for the flag above |
+| `MainMenuController.java` / `MainMenu.fxml` | History and Badges buttons in one row; a best-score line under the title | Three destinations had to fit in a 480 px window without pushing the menu off screen; the best scores are aggregated from the history rather than stored twice |
+| `ViewManager.java` | Screens for hacks, history and badges; the board fills the window instead of leaving a margin; the game runs on a transparent stage | The margin only made sense while the window was transparent and became a dead border where it was not |
+| `styling.css` | The night-theme background is scoped to the menu panes; badge tier colours; badge cards; the best-score label | A generic `.dark` background painted over the game scene, and the badge screen needed four visual tiers |
+| `GameTest.java` / `KeyBindingsTest.java` / `HacksTest.java` | Cases for the endless target, the win condition, the renamed pause action, the presets, the tiers and the mirror direction | Each new rule needed a test that pins it down |
 
 ---
 
 ## 8. Unexpected Problems
 
-<!-- TODO: obstacles hit so far, and how they were resolved -->
+- **The game window disappeared when the menu closed.** The game was first shown on a second stage created with `initOwner(mainStage)`. An owned window is hidden together with its owner, so `stage.hide()` — called right after showing the game — took the game window with it and clicking Play looked like it did nothing. Removing the owner relationship and showing the game before hiding the menu fixed it.
+- **A white frame around the board.** JavaFX adds the style class `root` to every scene root, and the stylesheet painted `.root` white. Inside the game window that rule covered the transparent margin around the board, so the board appeared to sit in a white frame. A `.root.gameScene` rule now keeps the game scene transparent.
+- **The status overlay used to be a rectangle over the whole window.** The overlay was stretched to the canvas, which in ghost-board mode is the size of the screen, so the darkened "block" was much larger than the board. It is now sized and positioned on the board rectangle.
+- **Array index out of bounds once the snake could leave the board.** `GameView` indexed a 20×20 `turnArray` with the snake's coordinates to remember where the body turned. As soon as the ghost board let the head leave that grid, the indices went negative and every frame threw, which froze the picture. The array is now allocated from the game's own dimensions and read through bounds-checked helpers.
+- **The snake kept moving after the game was won.** The win check ran *after* the score was increased and then returned early, so the coin was never replaced, the timeline was never stopped, and a finished run could still be steered around and fed the same coin for more points. `step()` now stops the timeline and the run on both "dead" and "won", and the clock is frozen at the same moment.
+- **A win through the Win hack was never recorded.** That path returned before the recording code, so no history entry and no badge was produced — which is why the waiting badge could never fire. The win path now records the run and scores the badges before showing the result.
+- **Java would not let an enum constant read a constant declared below it.** The secret badge's threshold first lived in a static field under the enum constants, which is an illegal forward reference. The value is now written into the rule itself, with a comment saying why.
+- **A removed action left a stale entry in the settings file.** When `PAUSE` was replaced by `PAUSE_MENU`, an old `key.PAUSE=P` line stayed in `settings.properties`. Unknown action names are ignored on load, so the file is harmless, but it is worth knowing about when reading a saved configuration.
+- **The Maven wrapper could not download its Maven distribution in this environment.** The pinned `apache-maven-3-bin.zip` URL returned 404 and the shell could not negotiate TLS, so the build was verified with `javac` plus the JUnit console launcher against a local Maven repository. The project itself builds normally with `.\mvnw.cmd` on a machine with network access.
+
+---
+
+## 9. Design Patterns
+
+The codebase uses a small number of patterns deliberately; they are listed here because they are spread over several classes.
+
+| Pattern | Where | What it buys |
+|---|---|---|
+| Strategy (as an enum of lambdas) | `Hack`, `Achievement` | Each entry carries its own rule as a `Predicate<RunSummary>`, so adding a badge or a hack is one enum constant instead of another branch inside the game loop |
+| Singleton | `Settings`, `Hacks`, `Achievements`, `RunHistory` | One process-wide store per concern; each loads itself once and is reachable from the screens that need it |
+| Observer | `SettingsController`, `HackMenuController` (property listeners) | A control writes its own change into the store and saves, so no screen has to poll another |
+| Model–View–Controller | every `*.fxml` with its `*Controller` | The layout stays in FXML, the wiring in the controller, and the state in the model classes |
+| Template method | `GameController.step()` | The per-tick skeleton (move, check death, eat, redraw, update status) is fixed, while the difficulty and the hacks change what each step does |
+| Factory-style selection | `GameController.newCoin()` | One place decides which `Coin` subclass the next pickup is, instead of the coin knowing about the game |
+| Value object | `RunRecord`, `RunSummary`, `Point`-based grid coordinates | Immutable data handed between the game, the history and the badge rules |
+| Facade | `ViewManager`, `AudioService` | One entry point for screen switching and one for sound, so no controller has to know how a stage or a `MediaPlayer` is built |
 
 ---
 
