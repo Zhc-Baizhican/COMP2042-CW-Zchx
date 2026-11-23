@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * used before the key bindings were made configurable.
  */
 class DirectionTest {
-
     @Test
     @DisplayName("opposite directions are detected")
     void oppositePairs() {
@@ -43,5 +42,14 @@ class DirectionTest {
         assertEquals('D', Direction.DOWN.toMoveChar());
         assertEquals('L', Direction.LEFT.toMoveChar());
         assertEquals('R', Direction.RIGHT.toMoveChar());
+    }
+
+    @Test
+    @DisplayName("the mirror hack swaps left and right and leaves up and down alone")
+    void mirroredSwapsOnlyLeftAndRight() {
+        assertEquals(Direction.RIGHT, Direction.LEFT.mirrored());
+        assertEquals(Direction.LEFT, Direction.RIGHT.mirrored());
+        assertEquals(Direction.UP, Direction.UP.mirrored());
+        assertEquals(Direction.DOWN, Direction.DOWN.mirrored());
     }
 }

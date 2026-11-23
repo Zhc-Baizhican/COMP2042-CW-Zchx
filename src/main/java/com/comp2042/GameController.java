@@ -49,7 +49,7 @@ public class GameController {
         this.respawnsLeft = initialRespawns();
         this.gameView.setPauseActions(this::resumeFromPause, this::restart, this::backToMenu);
         animation.setCycleCount(Animation.INDEFINITE);
-        animation.setRate(game.getSpeed());
+        animation.setRate(currentRate());
         clock.setCycleCount(Animation.INDEFINITE);
         clock.play();
     }
@@ -151,6 +151,8 @@ public class GameController {
             }
             animation.stop();
             finishClock();
+            gameView.shake();
+            audio.playDeath();
             recordRun(false);
             gameView.updateStatus(snek, paused);
             return;
@@ -158,6 +160,7 @@ public class GameController {
 
         if (snek.ateCoin(coin)) {
             playCoinSound();
+            gameView.flashCoin(coin.getPos().x, coin.getPos().y);
             powerCoin();
             game.incScore();
             if (game.gameWon()) {
@@ -201,7 +204,7 @@ public class GameController {
                 gameView.updateStatus(snek, paused);
                 return;
             }
-            animation.play();
+            startCountdown();
             return;
         }
 
@@ -249,7 +252,7 @@ public class GameController {
             return;
         }
         animation.play();
-        turnTowards(direction);
+        turnTowards(Hack.isOn(Hack.MIRROR) ? direction.mirrored() : direction);
     }
 
     private void turnTowards(Direction direction) {
@@ -337,7 +340,7 @@ public class GameController {
         Coin.Area area = Hacks.get().isEnabled(Hack.OFF_BOARD) ? Coin.Area.BOARD : Coin.Area.ANY;
         coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, spawnRadius(), area);
 
-        animation.setRate(game.getSpeed());
+        animation.setRate(currentRate());
         currentDirection = Direction.LEFT;
         lastDirection = Direction.LEFT;
         keyPressed = false;
@@ -374,11 +377,11 @@ public class GameController {
      * run resets both modifiers, so no effect leaks between coins.</p>
      */
     private void powerCoin() {
-        animation.setRate(game.getSpeed());
+        animation.setRate(currentRate());
         snek.ignoreBorders(false);
 
         if (coin instanceof RainbowCoin rainbow) {
-            animation.setRate(game.getSpeed() + rainbow.getSpeedBonus());
+            animation.setRate((game.getSpeed() + rainbow.getSpeedBonus()) * speedMultiplier());
         } else if (coin instanceof SilverCoin) {
             int before = obstacle.getObstacles().size();
             obstacle.newObstacles(snek, coin, random.nextInt(game.getWidth() * game.getHeight() / 20) + 3);
@@ -404,6 +407,10 @@ public class GameController {
     private void newCoin() {
         int radius = spawnRadius();
         Coin.Area area = spawnArea();
+        if (Hack.isOn(Hack.MIDAS)) {
+            coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
+            return;
+        }
         if (!game.isPowerUp()) {
             coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle, radius, area);
             return;
@@ -458,6 +465,44 @@ public class GameController {
                 || head.y < top || head.y >= top + boardRows;
     }
 
+    /**
+     * @return the speed multiplier applied by the turbo and slow-motion hacks
+     */
+    private double speedMultiplier() {
+        double factor = 1;
+        if (Hack.isOn(Hack.TURBO)) {
+            factor *= 2.2;
+        }
+        if (Hack.isOn(Hack.SLOW_MOTION)) {
+            factor *= 0.45;
+        }
+        return factor;
+    }
+
+    /**
+     * @return the animation rate the current difficulty and hacks ask for
+     */
+    private double currentRate() {
+        return game.getSpeed() * speedMultiplier();
+    }
+
+    /**
+     * Counts 3, 2, 1 over the board and only then releases the snake, so the run
+     * does not begin while the player is still reading the prompt.
+     */
+    private void startCountdown() {
+        Timeline countdown = new Timeline(
+                new KeyFrame(Duration.ZERO, event -> gameView.showCountdown(3)),
+                new KeyFrame(Duration.millis(420), event -> gameView.showCountdown(2)),
+                new KeyFrame(Duration.millis(840), event -> gameView.showCountdown(1)),
+                new KeyFrame(Duration.millis(1260), event -> gameView.showCountdown(0)),
+                new KeyFrame(Duration.millis(1560), event -> {
+                    gameView.hideStartPrompt();
+                    animation.play();
+                }));
+        countdown.play();
+    }
+
     /** Plays the pickup sound, subject to the sound settings. */
     private void playCoinSound() {
         audio.playCoin();
@@ -485,7 +530,11 @@ public class GameController {
 
         RunSummary summary = new RunSummary(won, game.getModeName(), game.getScorePoints(),
                 length, seconds, hacks, idleSeconds);
-        gameView.setEarnedBadges(Achievements.get().evaluate(summary));
+        List<Achievement> fresh = Achievements.get().evaluate(summary);
+        gameView.setEarnedBadges(fresh);
+        if (!fresh.isEmpty()) {
+            audio.playBadge();
+        }
 
         RunRecord record = new RunRecord(stamp, game.getModeName(), won,
                 game.getScorePoints(), length, hacks, imageName, formatTime(seconds));

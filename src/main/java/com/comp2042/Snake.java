@@ -129,10 +129,13 @@ public class Snake {
     }
 
     public boolean ateCoin(Coin coin) {
-        if (!head.equals(coin.getPos())) {
+        boolean ate = head.equals(coin.getPos());
+        // The no-growth hack keeps the tail moving even on a pickup, so eating
+        // never lengthens the snake.
+        if (!ate || Hack.isOn(Hack.NO_GROWTH)) {
             body.remove(0);
         }
-        return head.equals(coin.getPos());
+        return ate;
     }
 
     private boolean borderControl() {

@@ -39,4 +39,17 @@ public enum Direction {
     public boolean isOpposite(Direction other) {
         return other != null && rowDelta == -other.rowDelta && columnDelta == -other.columnDelta;
     }
+
+    /**
+     * Swaps left and right, for the mirror-keys hack. Up and down are unchanged.
+     *
+     * @return the mirrored direction
+     */
+    public Direction mirrored() {
+        return switch (this) {
+            case LEFT -> RIGHT;
+            case RIGHT -> LEFT;
+            default -> this;
+        };
+    }
 }

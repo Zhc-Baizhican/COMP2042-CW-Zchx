@@ -12,6 +12,8 @@ public enum HackPreset {
     CLEAR("Clear"),
     GHOST_BOARD("Ghost", Hack.OFF_BOARD),
     INSTANT_WIN("Win", Hack.WIN),
+    CHAOS("Chaos", Hack.MIRROR, Hack.TURBO, Hack.BLIND),
+    RICH("Rich", Hack.MIDAS, Hack.NO_GROWTH, Hack.SLOW_MOTION),
     EVERYTHING("All", Hack.values());
 
     private final String label;

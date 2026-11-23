@@ -88,4 +88,26 @@ class HacksTest {
 
         assertEquals(Hack.values().length, Hacks.get().enabledCount());
     }
+
+    @Test
+    @DisplayName("the chaos preset sets exactly the three chaos hacks")
+    void chaosPresetHasThreeHacks() {
+        HackPreset.CHAOS.applyTo(Hacks.get());
+
+        assertTrue(Hacks.get().isEnabled(Hack.MIRROR));
+        assertTrue(Hacks.get().isEnabled(Hack.TURBO));
+        assertTrue(Hacks.get().isEnabled(Hack.BLIND));
+        assertEquals(3, Hacks.get().enabledCount());
+    }
+
+    @Test
+    @DisplayName("every hack has a name and a description")
+    void everyHackIsDescribed() {
+        for (Hack hack : Hack.values()) {
+            assertTrue(hack.getDisplayName() != null && !hack.getDisplayName().isBlank(),
+                    hack + " needs a name");
+            assertTrue(hack.getDescription() != null && !hack.getDescription().isBlank(),
+                    hack + " needs a description");
+        }
+    }
 }

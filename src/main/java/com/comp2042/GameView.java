@@ -3,7 +3,10 @@ package com.comp2042;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -15,9 +18,11 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -73,6 +78,8 @@ public class GameView {
     private static final Duration STATUS_TEXT_DELAY = Duration.millis(170);
     private static final Duration STATUS_TEXT_IN = Duration.millis(260);
     private static final Duration BADGE_IN = Duration.millis(200);
+    private static final Duration COUNTDOWN_POP = Duration.millis(260);
+    private static final Duration COIN_FLASH = Duration.millis(280);
 
     private Animation fadeIn;
     private Animation textFadeIn;
@@ -182,6 +189,92 @@ public class GameView {
     }
 
     /**
+     * Shows a countdown number on the start overlay, used before the snake is
+     * released.
+     *
+     * @param number the number to show, or 0 for "GO!"
+     */
+    public void showCountdown(int number) {
+        if (startOverlay == null || startTitle == null) {
+            return;
+        }
+        startTitle.setText(number > 0 ? Integer.toString(number) : "GO!");
+        startOverlay.setVisible(true);
+
+        ScaleTransition pop = new ScaleTransition(COUNTDOWN_POP, startTitle);
+        pop.setFromX(1.6);
+        pop.setFromY(1.6);
+        pop.setToX(1);
+        pop.setToY(1);
+        pop.setInterpolator(Interpolator.EASE_OUT);
+        pop.play();
+    }
+
+    /**
+     * Shakes the board, for the moment the run ends.
+     */
+    public void shake() {
+        if (gridCanvas == null) {
+            return;
+        }
+        Timeline timeline = new Timeline();
+        for (int i = 0; i < 8; i++) {
+            final double dx = (Math.random() - 0.5) * 12;
+            final double dy = (Math.random() - 0.5) * 12;
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(28L * i), event -> {
+                gridCanvas.setTranslateX(dx);
+                gridCanvas.setTranslateY(dy);
+            }));
+        }
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(260), event -> {
+            gridCanvas.setTranslateX(0);
+            gridCanvas.setTranslateY(0);
+        }));
+        timeline.play();
+    }
+
+    /**
+     * Pops a ring where the coin was picked up.
+     *
+     * @param gridX column of the coin, in cells
+     * @param gridY row of the coin, in cells
+     */
+    public void flashCoin(int gridX, int gridY) {
+        if (!(gridCanvas.getParent() instanceof Pane pane)) {
+            return;
+        }
+        double cell = game.getMultiplier() * fullScale;
+        double centreX = gridOriginX() + gridX * cell + cell / 2;
+        double centreY = gridOriginY() + gridY * cell + cell / 2;
+
+        Circle ring = new Circle(cell * 0.45);
+        ring.setFill(Color.TRANSPARENT);
+        ring.setStroke(Color.rgb(255, 223, 130, 0.95));
+        ring.setStrokeWidth(2.5);
+        ring.setManaged(false);
+        ring.setMouseTransparent(true);
+        // The pane is a StackPane, so children sit in the middle: offset from
+        // the centre rather than from the top-left corner.
+        ring.setTranslateX(centreX - pane.getWidth() / 2);
+        ring.setTranslateY(centreY - pane.getHeight() / 2);
+        pane.getChildren().add(ring);
+
+        ScaleTransition grow = new ScaleTransition(COIN_FLASH, ring);
+        grow.setFromX(0.6);
+        grow.setFromY(0.6);
+        grow.setToX(2.6);
+        grow.setToY(2.6);
+
+        FadeTransition fade = new FadeTransition(COIN_FLASH, ring);
+        fade.setFromValue(1);
+        fade.setToValue(0);
+
+        ParallelTransition whole = new ParallelTransition(grow, fade);
+        whole.setOnFinished(event -> pane.getChildren().remove(ring));
+        whole.play();
+    }
+
+    /**
      * Pins the score bar and the status overlay to the painted board, so both
      * stay over the board instead of stretching across a screen-sized window.
      */
@@ -269,7 +362,35 @@ public class GameView {
 
         gc.restore();
 
+        if (Hack.isOn(Hack.BLIND)) {
+            drawDarkness(coin, snek);
+        }
+
         drawScore();
+    }
+
+    /**
+     * Covers the board in darkness, then lifts the corner on the head and the
+     * coin so the run stays playable.
+     */
+    private void drawDarkness(Coin coin, Snake snek) {
+        double cell = game.getMultiplier() * fullScale;
+        gc.setFill(Color.rgb(0, 0, 0, 0.93));
+        gc.fillRect(boardOriginX(), boardOriginY(), boardPixels(), boardPixels());
+
+        gc.save();
+        gc.translate(gridOriginX(), gridOriginY());
+        gc.drawImage(coin.getImage(), coin.getPos().x * cell, coin.getPos().y * cell,
+                cell - 3 * fullScale, cell - 3 * fullScale);
+        drawHead(snek);
+        gc.restore();
+
+        double centreX = gridOriginX() + snek.getHead().x * cell + cell / 2;
+        double centreY = gridOriginY() + snek.getHead().y * cell + cell / 2;
+        double radius = cell * 3;
+        gc.setStroke(Color.rgb(255, 240, 180, 0.22));
+        gc.setLineWidth(2);
+        gc.strokeOval(centreX - radius, centreY - radius, radius * 2, radius * 2);
     }
 
     private void drawGrid(Coin coin, Snake snek, GraphicsContext gc) {
