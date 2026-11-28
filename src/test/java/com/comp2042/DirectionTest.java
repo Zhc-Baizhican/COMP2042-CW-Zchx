@@ -1,5 +1,6 @@
 package com.comp2042;
 
+import com.comp2042.model.Direction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

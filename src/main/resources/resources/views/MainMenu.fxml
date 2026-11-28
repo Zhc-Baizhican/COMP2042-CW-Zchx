@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane id="backgroundPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.comp2042.MainMenuController">
+<AnchorPane id="backgroundPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.comp2042.controller.MainMenuController">
     <stylesheets>
         <URL value="@styling.css" />
     </stylesheets>

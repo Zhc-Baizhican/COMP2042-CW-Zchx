@@ -1,5 +1,8 @@
 package com.comp2042;
 
+import com.comp2042.hack.Hack;
+import com.comp2042.model.Game;
+import com.comp2042.settings.Settings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -37,7 +37,7 @@ cd CW2026-master
 
 1. `File → Open` and select `CW2026-master/pom.xml`, choose *Open as Project*
 2. Set *Project SDK* to **JDK 17**
-3. Let Maven import finish, then run `com.comp2042.Main`
+3. Let Maven import finish, then run `com.comp2042.view.Main`
 
 ### Build a runnable jar
 
@@ -113,7 +113,19 @@ difficulty presets, scoring and the win condition — 12 tests in total.
 
 ## 6. New Java Classes
 
-All under `src/main/java/com/comp2042/`.
+The classes live in seven packages under `src/main/java/com/comp2042/`:
+
+| Package | Responsibility | Classes |
+|---|---|---|
+| `model` | The game rules, with no JavaFX dependency | `Game`, `Snake`, `Coin`, `GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`, `Obstacle`, `BoardGeometry`, `Direction` |
+| `view` | Everything that draws or plays something | `Main`, `Launcher`, `ViewManager`, `GameView`, `ThemeManager`, `SnakeSkin`, `AudioService` |
+| `controller` | The game loop and one controller per screen | `GameController`, `MainMenuController`, `PlayMenuController`, `SettingsController`, `HackMenuController`, `HistoryController`, `AchievementController` |
+| `settings` | The configurable state and the key map | `Settings`, `SettingsStore`, `KeyBindings`, `Action` |
+| `run` | Finished-run records and their storage | `RunRecord`, `RunHistory`, `RunSummary` |
+| `hack` | The rule-breaking entries and the presets | `Hack`, `Hacks`, `HackPreset` |
+| `badge` | The achievements and their tiers | `Achievement`, `AchievementTier`, `Achievements` |
+
+The tests stay in `com.comp2042` and import from these packages.
 
 | Class | Purpose |
 |---|---|
@@ -230,3 +242,4 @@ The codebase uses a small number of patterns deliberately; they are listed here 
 | `v0.6-badges` | 15 achievements across four rarity tiers, evaluated at the end of every run, with a badge screen, pop-up badge cards, a masked secret badge and a developer mode that reveals the reset |
 | `v0.7-feel` | Six more hacks, two extra presets, and game feel: countdown, pickup ring, screen shake, death and badge sounds, best scores on the menu |
 | `v0.8-cleanup` | Dead `drawGrid` parameters, the duplicated renderer and the three copies of the board constant collapsed into `BoardGeometry` |
+| `v0.9-packages` | The flat `com.comp2042` package split into model / view / controller / settings / run / hack / badge, done on a branch and merged back |
