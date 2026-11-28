@@ -1,0 +1,27 @@
+package com.comp2042.view;
+
+import com.comp2042.settings.Settings;
+import com.comp2042.settings.SettingsStore;
+
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+public class Main extends Application {
+
+    private static ViewManager viewManager;
+
+    @Override
+    public void start(Stage primaryStage) {
+        SettingsStore.load(Settings.get());
+        viewManager = new ViewManager();
+        viewManager.initalizeMainMenu();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    public static ViewManager getViewManager() {
+        return viewManager;
+    }
+}

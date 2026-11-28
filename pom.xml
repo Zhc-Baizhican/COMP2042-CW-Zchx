@@ -17,7 +17,7 @@
         <javafx.version>21.0.13</javafx.version>
         <junit.version>5.11.4</junit.version>
         <!-- Main class (package "resources" matches the original project layout) -->
-        <mainClass>com.comp2042.Main</mainClass>
+        <mainClass>com.comp2042.view.Main</mainClass>
     </properties>
 
     <dependencies>

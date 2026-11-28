@@ -1,5 +1,7 @@
 package com.comp2042;
 
+import com.comp2042.run.RunHistory;
+import com.comp2042.run.RunRecord;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

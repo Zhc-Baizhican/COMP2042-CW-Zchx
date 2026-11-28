@@ -1,5 +1,8 @@
 package com.comp2042;
 
+import com.comp2042.model.Direction;
+import com.comp2042.settings.Action;
+import com.comp2042.settings.KeyBindings;
 import javafx.scene.input.KeyCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

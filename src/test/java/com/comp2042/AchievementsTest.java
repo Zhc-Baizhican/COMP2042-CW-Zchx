@@ -1,5 +1,11 @@
 package com.comp2042;
 
+import com.comp2042.badge.Achievement;
+import com.comp2042.badge.AchievementTier;
+import com.comp2042.badge.Achievements;
+import com.comp2042.hack.Hack;
+import com.comp2042.hack.Hacks;
+import com.comp2042.run.RunSummary;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
